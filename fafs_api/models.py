@@ -29,7 +29,7 @@ class UserManager(BaseUserManager):
 		return u
 
 class User(AbstractBaseUser):
-	school_id = models.OneToOneField(School)
+	school_id = models.ForeignKey(School)
 	email = models.EmailField(unique=True, blank=False)
 	rating = models.IntegerField(blank=True, null=True)
 	phone_number = models.CharField(max_length=20, blank=True)
