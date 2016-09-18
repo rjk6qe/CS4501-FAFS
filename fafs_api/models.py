@@ -1,12 +1,20 @@
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
-# Create your models here.
-
+from django.core.exceptions import ValidationError
 
 class School(models.Model):
-	name = models.CharField(max_length=75)
+	name = models.CharField(max_length=75, unique=True)
 	city = models.CharField(max_length=50)
 	state = models.CharField(max_length=30)
+
+	def clean(self):
+		if not (self.name and self.city and self.state):
+			raise ValidationError({"Error":"Missing required fields"})
+		try:
+			School.objects.get(name=self.name)
+			raise ValidationError({"Error":"This school already exists"})
+		except School.DoesNotExist:
+			pass
 
 class Address(models.Model):
 	street_number = models.IntegerField()
@@ -19,32 +27,53 @@ class Address(models.Model):
 
 class UserManager(BaseUserManager):
 
-	def create_user(self, email, school, password=None):
-		if not (email and school):
-			raise ValueError("Need an email!")
-		
-		u = self.model(
+	def create_user(self, email=None, school=None, password=None):
+		if not (email and school and password):
+			raise ValidationError(
+				{"Error":"Missing required fields."}
+				)
+		try:
+			school_id = School.objects.get(pk=school)
+			u = self.model(
 			email=UserManager.normalize_email(email),
-			school_id = school,
+			school_id = school_id,
 			)
-		u.set_password(password)
-		u.save()
-		return u
+			u.set_password(password)
+			u.clean()
+			u.save()
+			return u
+		except School.DoesNotExist:
+			raise ValidationError(
+				{"Error":"Invalid school number"}
+				)
 
 	def create_superuser(self, email, password=None):
 		u = self.create_user(email, password)
-		u.is_superuser = True
-		u.save()
-		return u
+		if u is None:
+			return None
+		else:
+			u.is_superuser = True
+			u.save()
+			return u
 
 class User(AbstractBaseUser):
 	school_id = models.ForeignKey(School)
 	email = models.EmailField(unique=True, blank=False)
 	rating = models.IntegerField(blank=True, null=True)
 	phone_number = models.CharField(max_length=20, blank=True)
+
 	objects = UserManager()
 
 	USERNAME_FIELD = 'email'
+
+	def clean(self):
+		try:
+			User.objects.get(email=self.email)
+			raise ValidationError(
+				{"Error":"User with this email already exists"}
+				)
+		except User.DoesNotExist:
+			pass #this is desired
 	
 class Category(models.Model):
 	name = models.CharField(max_length=50)
