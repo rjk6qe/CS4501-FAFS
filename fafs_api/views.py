@@ -8,7 +8,7 @@ from django.utils.decorators import method_decorator
 
 import json
 
-from fafs_api.models import User, School
+from fafs_api.models import User, Address, School, Category, Product
 
 def get_key(dictionary, key):
 	try:
@@ -72,6 +72,36 @@ class UserView(View):
 			status = 400
 		return HttpResponse(json_data,status=status)
 
+class AddressView(View):
+	required_fields = ['street_number', 'street_name', 'city', 'state', 'zipcode', 'description']
+	model = AddressView
+
+	@method_decorator(csrf_exempt)
+	def dispatch(self, request, *args, **kwargs):
+		return super(AddressView, self).dispatch(request, *args, **kwargs)
+
+	def get(self, request, pk=None):
+		if pk is not None:
+			queryset = get_object_or_404(
+				self.model,
+				pk=pk
+			)
+			json_data = json.dumps({
+				"pk": queryset.pk,
+				"street_number": queryset.street_number,
+				"street_name": queryset.street_name,
+				"city": queryset.city,
+				"state": queryset.state,
+				"zipcode": queryset.zipcode,
+				"description": queryset.description,
+				"address_2": queryset.address_2
+			})
+		else:
+			queryset = self.model.objects.all()
+			json_data = json.dumps(list(queryset.values('pk', 'street_number', 'street_name',
+				'city', 'state', 'zipcode', 'address_2')))
+		return HttpResponse(json_data)
+
 class SchoolView(View):
 
 	required_fields = ['name','city','state']
@@ -117,6 +147,116 @@ class SchoolView(View):
 				"city":school.city,
 				"state":school.state
 				})
+		except ValidationError as e:
+			status = 400
+			json_data = json.dumps(e.message_dict)
+		return HttpResponse(json_data, status=status)
+
+class CategoryView(View):
+	required_fields = ['name', 'description']
+	model = Category
+
+	@method_decorator(csrf_exempt)
+	def dispatch(self, request, *args, **kwargs):
+		return super(CategoryView, self).dispatch(request, *args, **kwargs)
+
+	def get(self, request, pk=None):
+		if pk is not None:
+			queryset = get_object_or_404(
+				self.model,
+				pk=pk
+			)
+			json_data = json.dumps({
+				"pk": queryset.pk,
+				"name": queryset.name,
+				"description": queryset.description
+			})
+		else:
+			queryset = self.model.objects.all()
+			json_data = json.dumps(list(queryset.values('pk', 'name', 'description')))
+		return HttpResponse(json_data)
+
+	def post(self, request):
+		status = 200
+		json_data = json.loads(request.body.decode('utf-8'))
+		field_dict = retrieve_all_fields(
+			json_data,
+			self.required_fields
+		)
+		try:
+			category = self.model(
+				name=field_dict['name'],
+				description=field_dict['description']
+			)
+			category.clean()
+			category.save()
+			json_data = json.dumps({
+				"name": category.name,
+				"description": category.description
+			})
+		except ValidationError as e:
+			status = 400
+			json_data = json.dumps(e.message_dict)
+		return HttpResponse(json_data, status=status)
+
+class ProductView(View):
+	required_fields = ['name', 'description', 'category_id', 'price', 'owner_id', 'pick_up']
+	model = Product
+
+	@method_decorator(csrf_exempt)
+	def dispatch(self, request, *args, **kwargs):
+		return super(ProductView, self).dispatch(request, *args, **kwargs)
+
+	def get(self, request, pk=None):
+		if pk is not None:
+			queryset = get_object_or_404(
+				self.model,
+				pk=pk
+			)
+			json_data = json.dumps({
+				"pk": queryset.pk,
+				"name": queryset.name,
+				"description": queryset.description,
+				"category_id": queryset.category_id.pk,
+				"price": queryset.price,
+				"owner_id": queryset.owner_id.pk,
+				"pick_up": queryset.pick_up,
+				"time_posted": queryset.time_posted,
+				"time_updated": queryset.time_updated
+			})
+		else:
+			queryset = self.model.objects.all()
+			json_data = json.dumps(list(queryset.values('pk','name','description',
+				'category_id', 'price', 'owner_id', 'pick_up', 'time_posted', 'time_updated')))
+		return HttpResponse(json_data)
+
+	def post(self, request):
+		status = 200
+		json_data = json.loads(request.body.decode('utf-8'))
+		field_dict = retrieve_all_fields(
+			json_data,
+			self.required_fields
+		)
+
+		try:
+			product = self.model(
+				name=field_dict['name'],
+				description=field_dict['description'],
+				category_id=field_dict['category_id'],
+				price=field_dict['price'],
+				owner_id=ield_dict['owner_id'],
+				pick_up=field_dict['pick_up']
+			)
+			product.clean()
+			product.save()
+			json_data = json.dumps({
+				"name": product.name,
+				"description": product.description,
+				"category_id": product.category_id.pk,
+				"price": product.price,
+				"owner_id": product.owner_id.pk,
+				"pick_up": product.pick_up,
+			})
 		except ValidationError as e:
 			status = 400
 			json_data = json.dumps(e.message_dict)

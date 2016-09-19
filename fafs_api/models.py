@@ -90,10 +90,10 @@ class Category(models.Model):
 class Product(models.Model):
 	name = models.CharField(max_length=50)
 	description = models.TextField(max_length=500)
-	category = models.ForeignKey(Category)
+	category_id = models.ForeignKey(Category)
 	price = models.DecimalField(max_digits=10, decimal_places=2)
-	picture = models.ImageField()
-	owner = models.ForeignKey(User)
+	#picture = models.ImageField()
+	owner_id = models.ForeignKey(User)
 	time_posted = models.DateTimeField(auto_now_add=True)
 	time_updated = models.DateTimeField(auto_now=True)
 	pick_up = models.CharField(max_length=50)

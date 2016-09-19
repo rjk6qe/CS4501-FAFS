@@ -6,4 +6,4 @@ models:
     - ".:/app"
   ports:
     - "8001:8000"
-  command: bash -c "mod_wsgi-express start-server --reload-on-changes FAFS/wsgi.py"
+  command: bash -c "python manage.py makemigrations && python manage.py migrate && mod_wsgi-express start-server --reload-on-changes FAFS/wsgi.py"
