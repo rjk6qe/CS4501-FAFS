@@ -74,7 +74,7 @@ class UserView(View):
 
 class AddressView(View):
 	required_fields = ['street_number', 'street_name', 'city', 'state', 'zipcode', 'description']
-	model = AddressView
+	model = Address
 
 	@method_decorator(csrf_exempt)
 	def dispatch(self, request, *args, **kwargs):
@@ -101,6 +101,38 @@ class AddressView(View):
 			json_data = json.dumps(list(queryset.values('pk', 'street_number', 'street_name',
 				'city', 'state', 'zipcode', 'address_2')))
 		return HttpResponse(json_data)
+
+	def post(self, request):
+		status = 200
+		json_data = json.loads(request.body.decode('utf-u'))
+		field_dict = retrieve_all_fields(
+			json_data,
+			self.required_fields
+		)
+		try:
+			address = self.model(
+				street_number = field_dict['street_number'],
+				street_name = field_dict['street_name'],
+				city = field_dict['city'],
+				state = field_dict['state'],
+				zipcode = field_dict['zipcode'],
+				address_2 = field_dict['address_2']
+			)
+			address.clean()
+			address.save()
+			json_data = json.dumps({
+				"street_number": address.street_number,
+				"street_name": address.street_name,
+				"city": address.city,
+				"state": address.state,
+				"zipcode": address.zipcode,
+				"address_2": address.address_2
+			})
+		except ValidationError as e:
+			status = 400
+			json_data = json.dumps(e.message_dict)
+		return HttpResponse(json_data, status=status)
+
 
 class SchoolView(View):
 
