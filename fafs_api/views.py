@@ -16,17 +16,16 @@ def get_key(dictionary, key):
 	except KeyError:
 		return None
 
-class UserView(View):
+def retrieve_all_fields(dictionary, field_list):
+	return_dict = {}
+	for field in field_list:
+		value = get_key(dictionary, field)
+		return_dict[field] = value
+	return return_dict
 
+class UserView(View):
 	required_fields = ['email', 'school_id', 'password']
 	model = User
-
-	def retrieve_all_fields(self, dictionary, field_list):
-		return_dict = {}
-		for field in field_list:
-			value = get_key(dictionary, field)
-			return_dict[field] = value
-		return return_dict
 
 	@method_decorator(csrf_exempt)
 	def dispatch(self, request, *args, **kwargs):
@@ -34,19 +33,28 @@ class UserView(View):
 
 	def get(self, request, pk=None):
 		if pk is not None:
-			queryset = get_object_or_404(self.model, pk=pk)
-			queryset = [queryset, ]
+			queryset = get_object_or_404(
+				self.model,
+				pk=pk
+				)
+			json_data = json.dumps({
+				"pk":queryset.pk,
+				"email":queryset.email,
+				"school_id":queryset.school_id.pk,
+				"rating":queryset.rating
+				})
 		else:
-			queryset = User.objects.all()
-		json_data = json.dumps(list(queryset.values('pk','email','school_id','rating')))
+			queryset = self.model.objects.all()
+			json_data = json.dumps(list(queryset.values('pk','email','school_id','rating')))
 		return HttpResponse(json_data)
 
 	def post(self, request):
 		status = 200
 		json_data = json.loads(request.body.decode('utf-8'))
-		field_dict = self.retrieve_all_fields(
+		field_dict = retrieve_all_fields(
 			json_data,
-			self.required_fields)
+			self.required_fields
+			)
 		try:
 			user = self.model.objects.create_user(
 				email=field_dict['email'],
@@ -57,7 +65,8 @@ class UserView(View):
 				"pk":user.pk,
 				"email":user.email,
 				"rating":user.rating,
-				"school_id":user.school_id.pk})
+				"school_id":user.school_id.pk
+				})
 		except ValidationError as e:
 			json_data = json.dumps(e.message_dict)
 			status = 400
@@ -68,31 +77,30 @@ class SchoolView(View):
 	required_fields = ['name','city','state']
 	model = School
 
-	def retrieve_all_fields(self, dictionary, field_list):
-		return_dict = {}
-		for field in field_list:
-			value = get_key(dictionary, field)
-			return_dict[field] = value
-		return return_dict
-
-
 	@method_decorator(csrf_exempt)
 	def dispatch(self, request, *args, **kwargs):
 		return super(SchoolView, self).dispatch(request, *args, **kwargs)
 
 	def get(self, request, pk=None):
 		if pk is not None:
-			queryset = get_object_or_404(self.model, pk=pk)
-			queryset = [queryset, ]
+			queryset = get_object_or_404(
+				self.model,
+				pk=pk)
+			json_data = json.dumps({
+				"pk":queryset.pk,
+				"name":queryset.name,
+				"city":queryset.city,
+				"state":queryset.state
+				})
 		else:
-			queryset = User.objects.all()
-		json_data = json.dumps(list(queryset.values('pk','name','city','state')))
+			queryset = self.model.objects.all()
+			json_data = json.dumps(list(queryset.values('pk','name','city','state')))
 		return HttpResponse(json_data)
 
 	def post(self, request):
 		status = 200
 		json_data = json.loads(request.body.decode('utf-8'))
-		field_dict = self.retrieve_all_fields(
+		field_dict = retrieve_all_fields(
 			json_data,
 			self.required_fields
 			)
@@ -113,4 +121,3 @@ class SchoolView(View):
 			status = 400
 			json_data = json.dumps(e.message_dict)
 		return HttpResponse(json_data, status=status)
-

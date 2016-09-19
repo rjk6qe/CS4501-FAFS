@@ -9,10 +9,14 @@ class School(models.Model):
 
 	def clean(self):
 		if not (self.name and self.city and self.state):
-			raise ValidationError({"Error":"Missing required fields"})
+			raise ValidationError({
+				"Error":"Missing required fields"
+				})
 		try:
 			School.objects.get(name=self.name)
-			raise ValidationError({"Error":"This school already exists"})
+			raise ValidationError({
+				"Error":"This school already exists"
+				})
 		except School.DoesNotExist:
 			pass
 
@@ -27,25 +31,25 @@ class Address(models.Model):
 
 class UserManager(BaseUserManager):
 
-	def create_user(self, email=None, school=None, password=None):
-		if not (email and school and password):
-			raise ValidationError(
-				{"Error":"Missing required fields."}
-				)
+	def clean_school(self, school_id):
 		try:
-			school_id = School.objects.get(pk=school)
+			s = School.objects.get(pk=school_id)
+			return s
+		except School.DoesNotExist:
+			raise ValidationError({
+				"Error":"Invalid school primary key."
+				})
+
+
+	def create_user(self, email=None, school=None, password=None):
 			u = self.model(
-			email=UserManager.normalize_email(email),
-			school_id = school_id,
-			)
+				email=UserManager.normalize_email(email),
+				school_id=self.clean_school(school)
+				)
 			u.set_password(password)
 			u.clean()
 			u.save()
 			return u
-		except School.DoesNotExist:
-			raise ValidationError(
-				{"Error":"Invalid school number"}
-				)
 
 	def create_superuser(self, email, password=None):
 		u = self.create_user(email, password)
@@ -67,6 +71,10 @@ class User(AbstractBaseUser):
 	USERNAME_FIELD = 'email'
 
 	def clean(self):
+		if not (self.email and self.school_id and self.password):
+			raise ValidationError(
+				{"Error":"Missing required fields."}
+				)
 		try:
 			User.objects.get(email=self.email)
 			raise ValidationError(
