@@ -8,7 +8,7 @@ from django.utils.decorators import method_decorator
 
 import json
 
-from fafs_api.models import User, Address, School, Category, Product
+from fafs_api.models import User, Address, School, Category, Product, Transaction
 
 def get_key(dictionary, key):
 	try:
@@ -288,6 +288,57 @@ class ProductView(View):
 				"price": product.price,
 				"owner_id": product.owner_id.pk,
 				"pick_up": product.pick_up,
+			})
+		except ValidationError as e:
+			status = 400
+			json_data = json.dumps(e.message_dict)
+		return HttpResponse(json_data, status=status)
+
+
+class TransactionView(View):
+	required_fields = ['seller', 'buyer', 'product_id']
+	model = Transaction
+
+	@method_decorator(csrf_exempt)
+	def dispatch(self, request, *args, **kwargs):
+		return super(TransactionView, self).dispatch(request, *args, **kwargs)
+
+	def get(self, request, pk=None):
+		if pk is not None:
+			queryset = get_object_or_404(
+				self.model,
+				pk=pk
+			)
+			json_data = json.dumps({
+				"pk": queryset.pk,
+				"seller": queryset.seller,
+				"buyer": queryset.buyer,
+				"product_id": queryset.product_id
+			})
+		else:
+			queryset = self.model.objects.all()
+			json_data = json.dumps(list(queryset.values('pk', 'seller', 'buyer', 'product_id')))
+		return HttpResponse(json_data)
+
+	def post(self, request):
+		status = 200
+		json_data = json.loads(request.body.decode('utf-8'))
+		field_dict = retrieve_all_fields(
+			json_data,
+			self.required_fields
+		)
+		try:
+			transaction = self.model(
+				seller=field_dict['seller'],
+				buyer=field_dict['buyer'],
+				product_id=field_dict['product_id']
+			)
+			transaction.clean()
+			transaction.save()
+			json_data = json.dumps({
+				"seller": transaction.seller,
+				"buyer": transaction.buyer,
+				"product_id": transaction.product_id
 			})
 		except ValidationError as e:
 			status = 400
