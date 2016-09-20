@@ -4,6 +4,7 @@ db.sqlite3
 fafs_api/migrations/*
 
 *~
-.db.json.swp
+*.swp
+*.swo
 
 .idea/
