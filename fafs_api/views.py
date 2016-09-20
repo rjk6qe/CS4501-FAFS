@@ -297,12 +297,21 @@ class ProductView(View):
 		)
 
 		try:
+			category = None
+			owner = None
+			try:
+				category = Category.objects.get(pk=field_dict['category_id'])
+				owner = User.objects.get(pk=field_dict['owner_id'])
+			except (Category.DoesNotExist, User.DoesNotExist):
+				raise ValidationError({
+					"Error":"Invalid category or owner id"
+					})
 			product = self.model(
 				name=field_dict['name'],
 				description=field_dict['description'],
-				category_id=field_dict['category_id'],
+				category_id=category,
 				price=field_dict['price'],
-				owner_id=ield_dict['owner_id'],
+				owner_id=owner,
 				pick_up=field_dict['pick_up']
 			)
 			product.clean()
@@ -337,9 +346,9 @@ class TransactionView(View):
 			)
 			json_data = json.dumps({
 				"pk": queryset.pk,
-				"seller": queryset.seller,
-				"buyer": queryset.buyer,
-				"product_id": queryset.product_id
+				"seller": queryset.seller.pk,
+				"buyer": queryset.buyer.pk,
+				"product_id": queryset.product_id.pk
 			})
 		else:
 			queryset = self.model.objects.all()
@@ -354,17 +363,28 @@ class TransactionView(View):
 			self.required_fields
 		)
 		try:
+			seller_id = None
+			buyer_id = None
+			product_id = None
+			try:
+				seller_id = User.objects.get(pk=field_dict['seller'])
+				buyer_id = User.objects.get(pk=field_dict['buyer'])
+				product_id = Product.objects.get(pk=field_dict['product_id'])
+			except User.DoesNotExist:
+				raise ValidationError({
+					"Error":"Invalid seller id"
+					})
 			transaction = self.model(
-				seller=field_dict['seller'],
-				buyer=field_dict['buyer'],
-				product_id=field_dict['product_id']
+				seller=seller_id,
+				buyer=buyer_id,
+				product_id=product_id
 			)
 			transaction.clean()
 			transaction.save()
 			json_data = json.dumps({
-				"seller": transaction.seller,
-				"buyer": transaction.buyer,
-				"product_id": transaction.product_id
+				"seller": transaction.seller.pk,
+				"buyer": transaction.buyer.pk,
+				"product_id": transaction.product_id.pk
 			})
 		except ValidationError as e:
 			status = 400
