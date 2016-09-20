@@ -25,6 +25,7 @@ def retrieve_all_fields(dictionary, field_list):
 
 class UserView(View):
 	required_fields = ['email', 'school_id', 'password']
+	update_fields = ['user_pk','email','password']
 	model = User
 
 	@method_decorator(csrf_exempt)
@@ -71,6 +72,31 @@ class UserView(View):
 			json_data = json.dumps(e.message_dict)
 			status = 400
 		return HttpResponse(json_data,status=status)
+
+	def patch(self, request):
+		status = 200
+		json_data = json.loads(request.body.decode('utf-8'))
+		field_dict = retrieve_all_fields(
+			json_data,
+			self.update_fields
+			)
+		try:
+			user = self.model.objects.update_user(
+				user_pk = get_key(field_dict,'user_pk'),
+				email = get_key(field_dict,'email'),
+				password = get_key(field_dict,'password')
+				)
+			json_data = json.dumps({
+				"pk":user.pk,
+				"email":user.email,
+				"rating":user.rating,
+				"school_id":user.school_id.pk
+				})
+		except ValidationError as e:
+			json_data = json.dumps(e.message_dict)
+			status = 400
+		return HttpResponse(json_data, status=status)
+
 
 class AddressView(View):
 	required_fields = ['street_number', 'street_name', 'city', 'state', 'zipcode', 'description']

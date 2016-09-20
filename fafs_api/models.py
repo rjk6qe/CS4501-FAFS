@@ -40,25 +40,53 @@ class UserManager(BaseUserManager):
 				"Error":"Invalid school primary key."
 				})
 
+	def clean_email(self, email):
+		try:
+			User.objects.get(email=email)
+			raise ValidationError({
+				"Error":"User with this email already exists"
+				})
+		except User.DoesNotExist:
+			return email
 
 	def create_user(self, email=None, school=None, password=None):
-			u = self.model(
-				email=UserManager.normalize_email(email),
-				school_id=self.clean_school(school)
-				)
-			u.set_password(password)
-			u.clean()
-			u.save()
-			return u
+		u = self.model(
+			email=UserManager.normalize_email(email),
+			school_id=self.clean_school(school)
+			)
+		u.set_password(password)
+		u.clean()
+		u.save()
+		return u
 
-	def create_superuser(self, email, password=None):
-		u = self.create_user(email, password)
-		if u is None:
-			return None
-		else:
-			u.is_superuser = True
-			u.save()
-			return u
+	def create_superuser(self, email=None, password=None, school=None):
+		u = self.create_user(email=email, password=password, school=school)
+		u.is_superuser = True
+		u.save()
+		return u
+
+	def update_user(self, user_pk, email=None, password=None):
+		try:
+			user = User.objects.get(pk=user_pk)
+			change = False
+			if email:
+				if self.clean_email(email):
+					user.email = email
+					change = True
+			if password:
+				user.set_password(password)
+				change = True
+			if change:
+				user.save()
+				return user
+			else:
+				raise ValidationError({
+					"Error":"Must specify new email or password"
+					})
+		except User.DoesNotExist:
+			raise ValidationError({
+				"Error":"Invalid user id" + str(user_pk)
+				})
 
 class User(AbstractBaseUser):
 	school_id = models.ForeignKey(School)
