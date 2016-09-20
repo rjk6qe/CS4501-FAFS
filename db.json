@@ -1,0 +1,28 @@
+[
+  {
+    "model": "fafs_api.school",
+    "pk": 1,
+    "fields": {
+      "name":"University of Virginia",
+      "city":"Charlottesville"
+    }
+  },
+  {
+    "model": "fafs_api.user",
+    "pk": 1,
+    "fields": {
+      "email": "email@email.com",
+      "password": "password1",
+      "school_id":1
+    }
+  },
+  {
+    "model": "fafs_api.user",
+    "pk": 2,
+    "fields": {
+      "email": "test@email.com",
+      "password": "password7",
+      "school_id":1
+    }
+  }
+]
