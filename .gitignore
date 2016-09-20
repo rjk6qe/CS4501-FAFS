@@ -3,4 +3,8 @@ db.sqlite3
 
 fafs_api/migrations/*
 
+*~
+*.swp
+*.swo
+
 .idea/
