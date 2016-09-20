@@ -130,3 +130,8 @@ class Product(models.Model):
 									choices=CONDITION_CHOICES,
 									default=NEW)
 
+
+class Transaction(models.Model):
+	seller = models.ForeignKey(User, related_name='transaction_seller')
+	buyer = models.ForeignKey(User, related_name='transaction_buyer')
+	product_id = models.ForeignKey(Product)
