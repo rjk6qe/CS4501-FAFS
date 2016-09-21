@@ -8,12 +8,21 @@
     }
   },
   {
+    "model": "fafs_api.school",
+    "pk": 2,
+    "fields": {
+      "name":"Georgia Tech",
+      "city":"Atlanta"
+    }
+  },
+  {
     "model": "fafs_api.user",
     "pk": 1,
     "fields": {
       "email": "email@email.com",
       "password": "password1",
-      "school_id":1
+      "school_id":1,
+      "phone_number": "555-555-5555"
     }
   },
   {
@@ -25,6 +34,28 @@
       "school_id":1, 
       "rating": 5,
       "phone_number": "555-555-5555"
+    }
+  },
+  {
+    "model": "fafs_api.user",
+    "pk": 3,
+    "fields": {
+      "email": "amy@email.com",
+      "password": "password10",
+      "school_id":2, 
+      "rating": 2,
+      "phone_number": "888-555-5555"
+    }
+  },
+  {
+    "model": "fafs_api.user",
+    "pk": 4,
+    "fields": {
+      "email": "jue@email.com",
+      "password": "password10",
+      "school_id":2, 
+      "rating": 4,
+      "phone_number": "111-555-5555"
     }
   },
   {
@@ -56,6 +87,22 @@
     }
   },
   {
+    "model": "fafs_api.category",
+    "pk": 3,
+    "fields": {
+      "name":"Textbooks",
+      "description":"This includes class textbooks."
+    }
+  },
+  {
+    "model": "fafs_api.category",
+    "pk": 4,
+    "fields": {
+      "name":"Tickets",
+      "description":"This includes concert and event tickets."
+    }
+  },
+  {
     "model": "fafs_api.product",
     "pk": 1,
     "fields": {
@@ -66,7 +113,8 @@
       "owner_id":"1",
       "time_posted":"2016-09-01T13:10:30+03:00",
       "time_updated":"2016-09-19T13:20:30+03:00",
-      "pick_up":"pick up in the alley behind pigeonhole"
+      "pick_up":"pick up in the alley behind pigeonhole",
+      "status":"N"
     }
   },
   {
@@ -77,10 +125,21 @@
       "description":"Women's pants. White. Size 3 tall.",
       "category_id":"2",
       "price":"10",
-      "owner_id":"1",
+      "owner_id":"2",
       "time_posted":"2016-09-02T13:00:30+03:00",
       "time_updated":"2016-09-10T13:20:30+03:00",
-      "pick_up":"pick up in the alley behind pigeonhole"
+      "pick_up":"pick up at crossroads",
+      "status":"UP"
+    }
+  },
+  {
+    "model": "fafs_api.transaction",
+    "pk": 1,
+    "fields": {
+      "seller":"1",
+      "buyer":"2",
+      "product_id":"2"
     }
   }
+
 ]
