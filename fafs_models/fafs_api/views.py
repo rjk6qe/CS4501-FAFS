@@ -1,4 +1,4 @@
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, get_object_or_404
 from django.views.generic import View
 from django.core.exceptions import ValidationError
@@ -23,6 +23,18 @@ def retrieve_all_fields(dictionary, field_list):
 		return_dict[field] = value
 	return return_dict
 
+def get_object_or_none(model, pk):
+	try:
+		return model.objects.get(pk=pk)
+	except model.DoesNotExist:
+		return None
+
+def json_encode_dict_and_status(dictionary, status):
+	response_dict = {}
+	response_dict["status"] = status
+	response_dict["response"] = dictionary
+	return response_dict
+
 class UserView(View):
 	required_fields = ['email', 'school_id', 'password']
 	update_fields = ['user_pk','email','password']
@@ -33,24 +45,33 @@ class UserView(View):
 		return super(UserView, self).dispatch(request, *args, **kwargs)
 
 	def get(self, request, pk=None):
+		status = False
 		if pk is not None:
-			queryset = get_object_or_404(
+			queryset = get_object_or_none(
 				self.model,
 				pk=pk
 				)
-			json_data = json.dumps({
-				"pk":queryset.pk,
-				"email":queryset.email,
-				"school_id":queryset.school_id.pk,
-				"rating":queryset.rating
-				})
+			if queryset is not None:
+				status = True
+				json_data = {
+					"pk":queryset.pk,
+					"email":queryset.email,
+					"school_id":queryset.school_id.pk,
+					"rating":queryset.rating
+					}
+			else:
+				status = False
+				json_data = {}
 		else:
+			status = True
 			queryset = self.model.objects.all()
-			json_data = json.dumps(list(queryset.values('pk','email','school_id','rating')))
-		return HttpResponse(json_data)
+			json_data = list(queryset.values('pk','email','school_id','rating'))
+		
+		return JsonResponse(json_encode_dict_and_status(json_data, status))
 
 	def post(self, request):
-		status = 200
+		status = True
+
 		json_data = json.loads(request.body.decode('utf-8'))
 		field_dict = retrieve_all_fields(
 			json_data,
@@ -62,19 +83,19 @@ class UserView(View):
 				password=field_dict['password'],
 				school=field_dict['school_id']
 				)
-			json_data = json.dumps({
+			json_data = {
 				"pk":user.pk,
 				"email":user.email,
 				"rating":user.rating,
 				"school_id":user.school_id.pk
-				})
+				}
 		except ValidationError as e:
-			json_data = json.dumps(e.message_dict)
-			status = 400
-		return HttpResponse(json_data,status=status)
+			json_data = e.message_dict
+			status = False
+		return JsonResponse(json_encode_dict_and_status(json_data, status))
 
 	def patch(self, request):
-		status = 200
+		status = True
 		json_data = json.loads(request.body.decode('utf-8'))
 		field_dict = retrieve_all_fields(
 			json_data,
@@ -86,16 +107,16 @@ class UserView(View):
 				email = get_key(field_dict,'email'),
 				password = get_key(field_dict,'password')
 				)
-			json_data = json.dumps({
+			json_data = {
 				"pk":user.pk,
 				"email":user.email,
 				"rating":user.rating,
 				"school_id":user.school_id.pk
-				})
+				}
 		except ValidationError as e:
-			json_data = json.dumps(e.message_dict)
-			status = 400
-		return HttpResponse(json_data, status=status)
+			json_data = e.message_dict
+			status = False
+		return JsonResponse(json_encode_dict_and_status(json_data, status))
 
 
 class AddressView(View):
@@ -107,29 +128,34 @@ class AddressView(View):
 		return super(AddressView, self).dispatch(request, *args, **kwargs)
 
 	def get(self, request, pk=None):
+		status = True
 		if pk is not None:
-			queryset = get_object_or_404(
+			queryset = get_object_or_none(
 				self.model,
 				pk=pk
 			)
-			json_data = json.dumps({
-				"pk": queryset.pk,
-				"street_number": queryset.street_number,
-				"street_name": queryset.street_name,
-				"city": queryset.city,
-				"state": queryset.state,
-				"zipcode": queryset.zipcode,
-				"description": queryset.description,
-				"address_2": queryset.address_2
-			})
+			if queryset is not None:
+				json_data = {
+					"pk": queryset.pk,
+					"street_number": queryset.street_number,
+					"street_name": queryset.street_name,
+					"city": queryset.city,
+					"state": queryset.state,
+					"zipcode": queryset.zipcode,
+					"description": queryset.description,
+					"address_2": queryset.address_2
+				}
+			else:
+				status = False
+				json_data = {}
 		else:
 			queryset = self.model.objects.all()
-			json_data = json.dumps(list(queryset.values('pk', 'street_number', 'street_name',
-				'city', 'state', 'zipcode', 'address_2')))
-		return HttpResponse(json_data)
+			json_data = list(queryset.values('pk', 'street_number', 'street_name',
+				'city', 'state', 'zipcode', 'address_2'))
+		return JsonResponse(json_encode_dict_and_status(json_data, status))
 
 	def post(self, request):
-		status = 200
+		status = True
 		json_data = json.loads(request.body.decode('utf-u'))
 		field_dict = retrieve_all_fields(
 			json_data,
@@ -146,18 +172,18 @@ class AddressView(View):
 			)
 			address.clean()
 			address.save()
-			json_data = json.dumps({
+			json_data = {
 				"street_number": address.street_number,
 				"street_name": address.street_name,
 				"city": address.city,
 				"state": address.state,
 				"zipcode": address.zipcode,
 				"address_2": address.address_2
-			})
+			}
 		except ValidationError as e:
-			status = 400
-			json_data = json.dumps(e.message_dict)
-		return HttpResponse(json_data, status=status)
+			status = False
+			json_data = e.message_dict
+		return JsonResponse(json_encode_dict_and_status(json_data, status))
 
 
 class SchoolView(View):
@@ -170,23 +196,28 @@ class SchoolView(View):
 		return super(SchoolView, self).dispatch(request, *args, **kwargs)
 
 	def get(self, request, pk=None):
+		status = True
 		if pk is not None:
-			queryset = get_object_or_404(
+			queryset = get_object_or_none(
 				self.model,
 				pk=pk)
-			json_data = json.dumps({
-				"pk":queryset.pk,
-				"name":queryset.name,
-				"city":queryset.city,
-				"state":queryset.state
-				})
+			if queryset is not None:
+				json_data = {
+					"pk":queryset.pk,
+					"name":queryset.name,
+					"city":queryset.city,
+					"state":queryset.state
+					}
+			else:
+				status = False
+				json_data = {}
 		else:
 			queryset = self.model.objects.all()
-			json_data = json.dumps(list(queryset.values('pk','name','city','state')))
-		return HttpResponse(json_data)
+			json_data = list(queryset.values('pk','name','city','state'))
+		return JsonResponse(json_encode_dict_and_status(json_data, status))
 
 	def post(self, request):
-		status = 200
+		status = True
 		json_data = json.loads(request.body.decode('utf-8'))
 		field_dict = retrieve_all_fields(
 			json_data,
@@ -200,15 +231,15 @@ class SchoolView(View):
 				)
 			school.clean()
 			school.save()
-			json_data = json.dumps({
+			json_data = {
 				"name":school.name,
 				"city":school.city,
 				"state":school.state
-				})
+				}
 		except ValidationError as e:
-			status = 400
-			json_data = json.dumps(e.message_dict)
-		return HttpResponse(json_data, status=status)
+			status = False
+			json_data = e.message_dict
+		return JsonResponse(json_encode_dict_and_status(json_data, status))
 
 class CategoryView(View):
 	required_fields = ['name', 'description']
@@ -219,23 +250,28 @@ class CategoryView(View):
 		return super(CategoryView, self).dispatch(request, *args, **kwargs)
 
 	def get(self, request, pk=None):
+		status = True
 		if pk is not None:
-			queryset = get_object_or_404(
+			queryset = get_object_or_none(
 				self.model,
 				pk=pk
 			)
-			json_data = json.dumps({
-				"pk": queryset.pk,
-				"name": queryset.name,
-				"description": queryset.description
-			})
+			if queryset is not None:
+				json_data = {
+					"pk": queryset.pk,
+					"name": queryset.name,
+					"description": queryset.description
+				}
+			else:
+				status = False
+				json_data = {}
 		else:
 			queryset = self.model.objects.all()
-			json_data = json.dumps(list(queryset.values('pk', 'name', 'description')))
-		return HttpResponse(json_data)
+			json_data = list(queryset.values('pk', 'name', 'description'))
+		return JsonResponse(json_encode_dict_and_status(json_data, status))
 
 	def post(self, request):
-		status = 200
+		status = True
 		json_data = json.loads(request.body.decode('utf-8'))
 		field_dict = retrieve_all_fields(
 			json_data,
@@ -248,14 +284,14 @@ class CategoryView(View):
 			)
 			category.clean()
 			category.save()
-			json_data = json.dumps({
+			json_data = {
 				"name": category.name,
 				"description": category.description
-			})
+			}
 		except ValidationError as e:
-			status = 400
-			json_data = json.dumps(e.message_dict)
-		return HttpResponse(json_data, status=status)
+			status = False
+			json_data = e.message_dict
+		return JsonResponse(json_encode_dict_and_status(json_data, status))
 
 class ProductView(View):
 	required_fields = ['name', 'description', 'category_id', 'price', 'owner_id', 'pick_up']
@@ -266,36 +302,40 @@ class ProductView(View):
 		return super(ProductView, self).dispatch(request, *args, **kwargs)
 
 	def get(self, request, pk=None):
+		status = True
 		if pk is not None:
-			queryset = get_object_or_404(
+			queryset = get_object_or_none(
 				self.model,
 				pk=pk
 			)
-			json_data = json.dumps({
-				"pk": queryset.pk,
-				"name": queryset.name,
-				"description": queryset.description,
-				"category_id": queryset.category_id.pk,
-				"price": queryset.price,
-				"owner_id": queryset.owner_id.pk,
-				"pick_up": queryset.pick_up,
-				"time_posted": queryset.time_posted,
-				"time_updated": queryset.time_updated
-			})
+			if queryset is not None:
+				json_data = {
+					"pk": queryset.pk,
+					"name": queryset.name,
+					"description": queryset.description,
+					"category_id": queryset.category_id.pk,
+					"price": queryset.price,
+					"owner_id": queryset.owner_id.pk,
+					"pick_up": queryset.pick_up,
+					"time_posted": queryset.time_posted,
+					"time_updated": queryset.time_updated
+				}
+			else:
+				status = False
+				json_data = {}
 		else:
 			queryset = self.model.objects.all()
-			json_data = json.dumps(list(queryset.values('pk','name','description',
-				'category_id', 'price', 'owner_id', 'pick_up', 'time_posted', 'time_updated')))
-		return HttpResponse(json_data)
+			json_data = list(queryset.values('pk','name','description',
+				'category_id', 'price', 'owner_id', 'pick_up', 'time_posted', 'time_updated'))
+		return JsonResponse(json_encode_dict_and_status(json_data, status))
 
 	def post(self, request):
-		status = 200
+		status = True
 		json_data = json.loads(request.body.decode('utf-8'))
 		field_dict = retrieve_all_fields(
 			json_data,
 			self.required_fields
 		)
-
 		try:
 			category = None
 			owner = None
@@ -316,18 +356,18 @@ class ProductView(View):
 			)
 			product.clean()
 			product.save()
-			json_data = json.dumps({
+			json_data = {
 				"name": product.name,
 				"description": product.description,
 				"category_id": product.category_id.pk,
 				"price": product.price,
 				"owner_id": product.owner_id.pk,
 				"pick_up": product.pick_up,
-			})
+			}
 		except ValidationError as e:
-			status = 400
-			json_data = json.dumps(e.message_dict)
-		return HttpResponse(json_data, status=status)
+			status = False
+			json_data = e.message_dict
+		return JsonResponse(json_encode_dict_and_status(json_data, status))
 
 
 class TransactionView(View):
@@ -339,24 +379,29 @@ class TransactionView(View):
 		return super(TransactionView, self).dispatch(request, *args, **kwargs)
 
 	def get(self, request, pk=None):
+		status = True
 		if pk is not None:
-			queryset = get_object_or_404(
+			queryset = get_object_or_none(
 				self.model,
 				pk=pk
 			)
-			json_data = json.dumps({
-				"pk": queryset.pk,
-				"seller": queryset.seller.pk,
-				"buyer": queryset.buyer.pk,
-				"product_id": queryset.product_id.pk
-			})
+			if queryset is not None:
+				json_data = {
+					"pk": queryset.pk,
+					"seller": queryset.seller.pk,
+					"buyer": queryset.buyer.pk,
+					"product_id": queryset.product_id.pk
+				}
+			else:
+				status = False
+				json_data = {}
 		else:
 			queryset = self.model.objects.all()
-			json_data = json.dumps(list(queryset.values('pk', 'seller', 'buyer', 'product_id')))
-		return HttpResponse(json_data)
+			json_data = list(queryset.values('pk', 'seller', 'buyer', 'product_id'))
+		return JsonResponse(json_encode_dict_and_status(json_data, status))
 
 	def post(self, request):
-		status = 200
+		status = True
 		json_data = json.loads(request.body.decode('utf-8'))
 		field_dict = retrieve_all_fields(
 			json_data,
@@ -381,12 +426,12 @@ class TransactionView(View):
 			)
 			transaction.clean()
 			transaction.save()
-			json_data = json.dumps({
+			json_data = {
 				"seller": transaction.seller.pk,
 				"buyer": transaction.buyer.pk,
 				"product_id": transaction.product_id.pk
-			})
+			}
 		except ValidationError as e:
-			status = 400
-			json_data = json.dumps(e.message_dict)
-		return HttpResponse(json_data, status=status)
+			status = False
+			json_data = e.message_dict
+		return JsonResponse(json_encode_dict_and_status(json_data, status))
