@@ -6,12 +6,13 @@ import json
 
 
 def index(request):
-    #return HttpResponse("Hello, world. You're at the polls index.")
                                                                                                                   
     print ("About to do the GET...")
-    req = urllib.request.Request('http://exp-api:8000/fafs/categories/')
-    resp_json = urllib.request.urlopen(req).read().decode('utf-8')
-    resp = json.loads(resp_json)
-    print(resp)
-    context_dict = {'contents': resp}
+    cat_req = urllib.request.Request('http://exp-api:8000/fafs/categories/')
+    cat_resp_json = urllib.request.urlopen(cat_req).read().decode('utf-8')
+    cat_resp = json.loads(cat_resp_json)
+    product_req = urllib.request.Request('http://exp-api:8000/fafs/products/')
+    product_resp_json = urllib.request.urlopen(product_req).read().decode('utf-8')
+    product_resp = json.loads(product_resp_json)
+    context_dict = {'categories': cat_resp, 'products' : product_resp }
     return render(request, 'fafs_api/index.html', context_dict)

@@ -2,7 +2,7 @@
 
 {% block side_block %}
     <ul class="nav nav-pills nav-stacked">
-	{% for category in contents.response %}
+	{% for category in categories.response %}
 	    <li role="presentation"> <a href="#">{{ category.name }} </a></li>
 	{% endfor %}
     <ul>
@@ -13,7 +13,9 @@
     <h1> Welcome to the University of Virginia Free and For Sale <h1>
     <h2> New Items </h2>
 
-	{{ contents.response }}
+	{{ categories.response }}
+	<br>
+	{{ products.response}}
 
     <h2> Your Items </h2>
 
