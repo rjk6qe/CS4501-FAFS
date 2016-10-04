@@ -6,7 +6,7 @@ from django.http import HttpResponse
 
 # Create your views here.
 
-def index(request):
+def getCategory(request):
                                                                                                                   
     print ("About to do the GET...")
     req = urllib.request.Request('http://models-api:8000/api/categories/')
