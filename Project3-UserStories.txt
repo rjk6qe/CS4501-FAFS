@@ -1,0 +1,5 @@
+1. As an admin, I want to be able to delete items.
+2. As a user, I want to see available new items in my area on the home page.
+3. As a user, I want to to be able to see item details. 
+4. As a user, I want to be able to log in. 
+5. As a user, I want to be able to see categories. 

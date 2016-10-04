@@ -1,8 +1,8 @@
 *.pyc
 db.sqlite3
 
-fafs_api/migrations/*
 
+migrations/
 *~
 *.swp
 *.swo
