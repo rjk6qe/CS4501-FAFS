@@ -13,8 +13,9 @@ def append_to_url(path_list):
     url = API_URL
     if path_list is not None:
         for path in path_list:
-            url = url + str(path) + '/'
-    return url    
+            if path is not None:
+                url = url + str(path) + '/'
+    return url
 
 def make_request(path):
     req = urllib.request.Request(API_URL + path)
@@ -38,19 +39,21 @@ def json_encode_dict_and_status(dictionary, status):
     response_dict["response"] = dictionary
     return response_dict
 
-def getCategories(request):
-    response = get_request(['categories',])
+def get_categories(request, pk=None):
+    path_list = ['categories',pk]
+    if pk is not None:
+        path_list.append(pk)
+    response = get_request(path_list)
     return JsonResponse(response)
 
-def getProducts(request):
-    response = get_request(['products',])
+def get_products(request, pk=None):
+    path_list = ['products',pk]
+    response = get_request(path_list)
     return JsonResponse(response)
 
-def getProduct(request, pk):
-    response = get_request(['products',pk])
-    return JsonResponse(response)
-
-def getLatestProducts(request, num=3):
+def get_latest_products(request, num=None):
+    if num is None:
+        num = 3
     response = get_request(['products',])
     product_data = response['response']
     sorted_products = sorted(product_data, key = lambda x: x["time_posted"], reverse=True)[:int(num)]
