@@ -1,0 +1,23 @@
+{% extends 'fafs_api/base.html' %}
+{% load humanize %}
+
+{% block side_block %}
+    <ul class="nav nav-pills nav-stacked">
+	{% for category in categories.response %}
+	    <li role="presentation"> <a href="#">{{ category.name }} </a></li>
+	{% endfor %}
+    <ul>
+{% endblock %}
+
+{% block body_block %}
+
+<h1>{{ product.name }}</h1>
+<h2>Category Id: {{ product.category_id }}</h2>
+<p>{{ product.description }}</p>
+<h2>Pick up:</h2>
+<p>{{ product.pick_up}}</p>
+<h2>Price: ${{ product.price | intcomma }}</h2>
+<h2>Date posted: {{ product.time_posted }}</h2>
+<h2>Date updated: {{ product.time_updated }}</h2>
+
+{% endblock %}
