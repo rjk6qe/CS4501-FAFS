@@ -1,0 +1,20 @@
+{% extends 'fafs_api/base.html' %}
+
+{% block side_block %}
+    <ul class="nav nav-pills nav-stacked">
+	{% for category in categories.response %}
+	    <li role="presentation"> <a href="#">{{ category.name }} </a></li>
+	{% endfor %}
+    <ul>
+{% endblock %}
+
+{% block body_block %}
+{{product}}
+<h1>{{ product.name }}</h1>
+<p>{{ product.description }}</p>
+<h2>Pick up:</h2>
+<p>{{ product.pick_up}}</p>
+<h2>Price: {{ product.price }}</h2>
+
+
+{% endblock %}

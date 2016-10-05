@@ -7,6 +7,11 @@ from django.http import HttpResponse, JsonResponse
 # Create your views here.
 API_URL = 'http://models-api:8000/api/'
 
+def make_request(path):
+    req = urllib.request.Request(API_URL + path)
+    resp_json = urllib.request.urlopen(req).read().decode('utf-8')
+    return json.loads(resp_json)
+
 def json_encode_dict_and_status(dictionary, status):
 	response_dict = {}
 	response_dict["status"] = status
@@ -26,6 +31,10 @@ def getProducts(request):
     resp_json = urllib.request.urlopen(req).read().decode('utf-8')
     #resp = json.loads(resp_json)
     return HttpResponse(resp_json)
+
+def getProduct(request, pk):
+	product_data = make_request('products/' + pk)
+	return JsonResponse(json_encode_dict_and_status(product_data['response'], True))
 
 def getLatestProducts(request, num=3):
     req = urllib.request.Request(API_URL + 'products/')
