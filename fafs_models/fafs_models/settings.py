@@ -40,6 +40,8 @@ INSTALLED_APPS = (
     'fafs_api'
 )
 
+#AUTH_USER_MODEL = "fafs_api.User"
+
 MIDDLEWARE_CLASSES = (
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
