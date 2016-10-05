@@ -41,8 +41,6 @@ def json_encode_dict_and_status(dictionary, status):
 
 def get_categories(request, pk=None):
     path_list = ['categories',pk]
-    if pk is not None:
-        path_list.append(pk)
     response = get_request(path_list)
     return JsonResponse(response)
 
