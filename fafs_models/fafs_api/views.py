@@ -71,7 +71,6 @@ class UserView(View):
 
 	def post(self, request):
 		status = True
-
 		json_data = json.loads(request.body.decode('utf-8'))
 		field_dict = retrieve_all_fields(
 			json_data,
@@ -118,6 +117,14 @@ class UserView(View):
 			status = False
 		return JsonResponse(json_encode_dict_and_status(json_data, status))
 
+	def delete(self, request, pk=None):
+		status = False
+		obj = get_object_or_none(self.model, pk)
+		if obj is not None:
+			obj.delete()
+			status = True
+		return JsonResponse(json_encode_dict_and_status({},status))
+
 
 class AddressView(View):
 	required_fields = ['street_number', 'street_name', 'city', 'state', 'zipcode', 'description']
@@ -156,7 +163,7 @@ class AddressView(View):
 
 	def post(self, request):
 		status = True
-		json_data = json.loads(request.body.decode('utf-u'))
+		json_data = json.loads(request.body.decode('utf-8'))
 		field_dict = retrieve_all_fields(
 			json_data,
 			self.required_fields
@@ -184,6 +191,14 @@ class AddressView(View):
 			status = False
 			json_data = e.message_dict
 		return JsonResponse(json_encode_dict_and_status(json_data, status))
+
+	def delete(self, request, pk=None):
+		status = False
+		obj = get_object_or_none(self.model, pk)
+		if obj is not None:
+			obj.delete()
+			status = True
+		return JsonResponse(json_encode_dict_and_status({},status))
 
 
 class SchoolView(View):
@@ -241,6 +256,15 @@ class SchoolView(View):
 			json_data = e.message_dict
 		return JsonResponse(json_encode_dict_and_status(json_data, status))
 
+	def delete(self, request, pk=None):
+		status = False
+		obj = get_object_or_none(self.model, pk)
+		if obj is not None:
+			obj.delete()
+			status = True
+		return JsonResponse(json_encode_dict_and_status({},status))
+
+
 class CategoryView(View):
 	required_fields = ['name', 'description']
 	model = Category
@@ -292,6 +316,23 @@ class CategoryView(View):
 			status = False
 			json_data = e.message_dict
 		return JsonResponse(json_encode_dict_and_status(json_data, status))
+
+	def delete(self, request, pk=None):
+		status = False
+		obj = get_object_or_none(self.model, pk)
+		if obj is not None:
+			obj.delete()
+			status = True
+		return JsonResponse(json_encode_dict_and_status({},status))
+
+	def delete(self, request, pk=None):
+		status = False
+		obj = get_object_or_none(self.model, pk)
+		if obj is not None:
+			obj.delete()
+			status = True
+		return JsonResponse(json_encode_dict_and_status({},status))
+
 
 class ProductView(View):
 	required_fields = ['name', 'description', 'category_id', 'price', 'owner_id', 'pick_up']
@@ -369,6 +410,15 @@ class ProductView(View):
 			json_data = e.message_dict
 		return JsonResponse(json_encode_dict_and_status(json_data, status))
 
+	def delete(self, request, pk=None):
+		status = False
+		obj = get_object_or_none(self.model, pk)
+		if obj is not None:
+			obj.delete()
+			status = True
+		return JsonResponse(json_encode_dict_and_status({},status))
+
+
 
 class TransactionView(View):
 	required_fields = ['seller', 'buyer', 'product_id']
@@ -435,3 +485,11 @@ class TransactionView(View):
 			status = False
 			json_data = e.message_dict
 		return JsonResponse(json_encode_dict_and_status(json_data, status))
+
+	def delete(self, request, pk=None):
+		status = False
+		obj = get_object_or_none(self.model, pk)
+		if obj is not None:
+			obj.delete()
+			status = True
+		return JsonResponse(json_encode_dict_and_status({},status))

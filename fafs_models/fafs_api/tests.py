@@ -1,239 +1,358 @@
 from django.test import TestCase
 from django.contrib.auth import authenticate
 from fafs_api.models import User, School, UserManager
+from fafs_api.admin import authenticate
 
 import json
 
 # Create your tests here.
 
-class test_user_creation(TestCase):
+def json_response_to_dict(response):
+	return response.json()
 
-	init_school_values = {"name":"University of Virginia", "city":"Charlottesville", "state":"Virginia"}
-	init_user_values = {"email":"gmail@gmail.com", "password":"password1"}
-	user_one_values = {"email":"email@email.com", "password":"password2","school_id":1}
 
-	def create_school(self,dictionary):
-		return School.objects.create(
-			name=dictionary['name'],
-			city=dictionary['city'],
-			state=dictionary['state']
+def post_request(self, url, data):
+	status = True
+	if isinstance(data, list):
+		num_objs = len(data)
+		for i in range(0, num_objs):
+			obj = data[i]
+			response = json_response_to_dict(
+				self.client.post(
+					url,
+					data=json.dumps(obj),
+					content_type="application/json"
+					)
+				)
+			status = status and response['status']
+		return status
+	elif isinstance(data, dict):
+		return self.client.post(
+			url,
+			data=json.dumps(data),
+			content_type="application/json"
+			)
+	else:
+		return None
+
+def get_request(self, url, pk=None):
+	get_url = url
+	if pk is not None:
+		get_url = get_url + str(pk) + '/'
+	return self.client.get(
+		get_url
+		)
+
+def patch_request(self, url, data):
+	return self.client.patch(
+		url,
+		data=json.dumps(data),
+		content_type="application/json"
+		)
+
+def delete_request(self, url, pk=None):
+	delete_url = url
+	if pk is not None:
+		delete_url = delete_url + str(pk) + '/'
+	return self.client.delete(
+		delete_url
+		)
+
+def create_model(model, data):
+	if model == School:
+		School.objects.create(
+			name=data['name'],
+			city=data['city'],
+			state=data['state']
 			)
 
-	def create_user(self, dictionary, school):
-		return User.objects.create_user(
-			email=dictionary['email'],
-			password=dictionary['password'],
-			school=school.pk
-			)
+class test_user(TestCase):
+
+	school_values = {"name":"University of Virginia", "city":"Charlottesville", "state":"Virginia"}
+	user_list = [
+		{"email":"gmail@gmail.com", "password":"password1","school_id":"1"},
+		{"email":"email@email.com", "password":"password2","school_id":"1"}
+		]
+	required_models = [School,]
+	required_model_fields = {str(School):school_values}
+	url = "/api/users/"
 
 	def setUp(self):
-		school = self.create_school(self.init_school_values)
-		self.create_user(self.init_user_values, school)
+		for model in self.required_models:
+			create_model(model, self.required_model_fields[str(model)])
 
-	def test_get_created_users(self):
-		response = self.client.get('/api/users/')
-		self.assertEqual(
-			len(json.loads(response.content.decode('utf-8'))),
-			1,
-			"Incorrect number of users shown after setup"
+	def test_create_user(self):
+		user = self.user_list[0]
+		response = json_response_to_dict(
+			post_request(
+				self,
+				self.url,
+				data=user
+				)
 			)
 		self.assertEqual(
-			len(User.objects.all()),
-			1,
-			"Incorrect number of users in database"
-			)
-
-	def test_create_user_with_non_unique_email(self):
-		response = self.client.post(
-			'/api/users/',
-			data=json.dumps(self.init_user_values),
-			content_type="application/json"
+			response['status'],
+			True,
+			"Incorrect response for valid user data"
 			)
 		self.assertEqual(
-			response.status_code,
-			400,
-			"Incorrect response code")
-		self.assertEqual(
-			len(User.objects.all()),
-			1,
-			"Incorrect  number of users in database after unsuccessfull user request"
-			)
-
-	def test_create_user_with_unique_email(self):
-		response = self.client.post(
-			'/api/users/',
-			data=json.dumps(self.user_one_values),
-			content_type="application/json"
-			)
-		self.assertEqual(
-			response.status_code,
-			200,
-			"Incorrect response code")
-		self.assertEqual(
-			len(User.objects.all()),
-			2,
-			"Incorrect number of users in db after successfull user creation")
-		
-		response = json.loads(response.content.decode('utf-8'))
-		user_email = response['email']
-		
-		self.assertEqual(
-			user_email,
-			self.user_one_values['email'],
+			response['response']['email'],
+			user['email'],
 			"Incorrect email"
 			)
 
-class test_school_creation(TestCase):
-	bad_school_values = {"name":"Virginia Tech", "city":"Blacksburg", "state":"Virginia"}
-	good_school_values = {"name":"University of Virginia", "city":"Charlottesville", "state":"Virginia"}
-
-	def create_school(self,dictionary):
-		School.objects.create(
-			name=dictionary['name'],
-			city=dictionary['city'],
-			state=dictionary['state']
+	def test_create_user_with_nonunique_email(self):
+		user = self.user_list[0]
+		post_request(
+			self,
+			self.url,
+			data=user
 			)
-
-	def setUp(self):
-		self.create_school(self.bad_school_values)
-
-	def test_create_non_unique_school(self):
-		response = self.client.post(
-			'/api/schools/',
-			data=json.dumps(self.bad_school_values),
-			content_type="application/json"
+		response = json_response_to_dict(
+			post_request(
+				self,
+				self.url,
+				data=user,
+				)
 			)
 		self.assertEqual(
-			response.status_code,
-			400,
-			"Incorrect response code")
-		self.assertEqual(
-			len(School.objects.all()),
-			1,
-			"Incorrect number of schools in database after unsuccessfull creation request"
+			response['status'],
+			False,
+			"Incorrect response for invalid user data")
+
+	def test_get_user_by_id(self):
+		user = self.user_list[0]
+		response = json_response_to_dict(
+			post_request(
+				self,
+				self.url,
+				data=user
+				)
 			)
-
-	def test_create_unique_school(self):
-		response = self.client.post(
-			'/api/schools/',
-			data=json.dumps(self.good_school_values),
-			content_type="application/json"
+		user_id = response['response']['pk']
+		response = json_response_to_dict(
+			get_request(
+				self,
+				self.url,
+				pk=user_id
+				)
 			)
 		self.assertEqual(
-			len(School.objects.all()),
-			2,
-			"Incorrect number of schools in db after successfull school creation")
-		self.assertEqual(
-			response.status_code,
-			200,
-			"Incorrect response code")
-
-class test_superuser(TestCase):
-
-	bad_school_values = {"name":"Virginia Tech", "city":"Blacksburg", "state":"Virginia"}
-	good_school_values = {"name":"University of Virginia", "city":"Charlottesville", "state":"Virginia"}
-	user_one_values = {"email":"email@email.com", "password":"password2","school_id":1}
-
-	def create_school(self,dictionary):
-		School.objects.create(
-			name=dictionary['name'],
-			city=dictionary['city'],
-			state=dictionary['state']
-			)
-
-	def setUp(self):
-		self.create_school(self.bad_school_values)
-
-	def test_create_superuser(self):
-		s = School.objects.get(name=self.bad_school_values['name'])
-		s_pk = s.pk
-		
-		u = User.objects.create_superuser(
-			email=self.user_one_values['email'],
-			password=self.user_one_values['password'],
-			school=s_pk)
-
-		self.assertEqual(
-			u.is_superuser,
+			response['status'],
 			True,
-			"Created user is not a superuser"
-			)
-
-class test_patch_user(TestCase):
-
-
-	bad_school_values = {"name":"Virginia Tech", "city":"Blacksburg", "state":"Virginia"}
-	good_school_values = {"name":"University of Virginia", "city":"Charlottesville", "state":"Virginia"}
-	user_one_values = {"email":"email@email.com", "password":"password2","school_id":1}
-
-	def create_school(self,dictionary):
-		School.objects.create(
-			name=dictionary['name'],
-			city=dictionary['city'],
-			state=dictionary['state']
-			)
-
-	def setUp(self):
-		self.create_school(self.bad_school_values)
-		User.objects.create_user(
-			email=self.user_one_values['email'],
-			password=self.user_one_values['password'],
-			school=self.user_one_values['school_id']
-			)
-
-	def test_update_user(self):
-		updated_user = User.objects.get(email=self.user_one_values['email'])
-		new_email = 'new_email@new_email.com'
-		new_password = 'new_password'
-		response = self.client.patch(
-			'/api/users/',
-			data=json.dumps({
-				"user_pk":updated_user.pk,
-				"email":new_email,
-				"password": new_password}),
-			content_type="application/json"
+			"Incorrect response for valid user id"
 			)
 		self.assertEqual(
-			response.status_code,
-			200,
-			"Incorrect status code for valid update"
-			)
-		new_user = User.objects.get(email=new_email)
-
-		self.assertEqual(
-			new_user.pk,
-			updated_user.pk,
-			"Primary key changed"
-			)
-		self.assertEqual(
-			new_user.email,
-			new_email,
-			"Email was not changed"
+			response['response']['email'],
+			user['email'],
+			"Retrieved incorrect email for user"
 			)
 
-		auth_user = authenticate(username=new_user.email, password=new_password)
-		self.assertNotEqual(
+	def test_get_user_with_incorrect_id(self):
+		user = self.user_list[0]
+		response = json_response_to_dict(
+			post_request(
+				self,
+				self.url,
+				user,
+				)
+			)
+		user_id = response['response']['pk']
+		response = json_response_to_dict(
+			get_request(
+				self,
+				self.url,
+				pk=13
+				)
+			)
+		self.assertEqual(
+			response['status'],
+			False,
+			"Incorrect response for invalid GET request"
+			)
+
+	def test_get_multiple_users(self):
+		num_users = len(self.user_list)
+		post_request(
+			self,
+			self.url,
+			self.user_list
+			)
+		response = json_response_to_dict(
+			get_request(
+				self,
+				self.url
+				)
+			)
+		self.assertEqual(
+			len(response['response']),
+			num_users,
+			"Incorrect number of users returned"
+			)
+
+	def test_update_user_with_valid_email(self):
+		user = self.user_list[0]
+		response = json_response_to_dict(
+			post_request(
+				self,
+				self.url,
+				user
+				)
+			)
+		user_obj = User.objects.get(email=user['email'])
+
+		user_id = response['response']['pk']
+		response = json_response_to_dict(
+			patch_request(
+				self,
+				self.url,
+				{"user_pk":user_id,
+				"email":self.user_list[1]['email'],
+				"password":self.user_list[1]['password']}
+				)
+			)
+		self.assertEqual(
+			response['status'],
+			True,
+			"Incorrect status when updating a user with a valid email"
+			)
+
+		auth_user = authenticate(
+			username=self.user_list[1]['email'],
+			password=self.user_list[1]['password']
+			)
+		self.assertEqual(
+			user_obj,
 			auth_user,
-			None,
-			"User was not found when authenticating"
+			"Login failed after updating user object"
 			)
 
-	def test_bad_update_user(self):
-		updated_user = User.objects.get(email=self.user_one_values['email'])
-		new_email = 'new_email@new_email.com'
-		new_password = 'new_password'
-		response = self.client.patch(
-			'/api/users/',
-			data=json.dumps({
-				"user_pk": 65,
-				"email":new_email,
-				"password": new_password
-				}),
-			content_type="application/json"
+	def test_update_user_with_invalid_email(self):
+		num_users = len(self.user_list)
+		post_request(
+			self,
+			self.url,
+			self.user_list
+			)
+		response = json_response_to_dict(
+			patch_request(
+				self,
+				self.url,
+				{"pk":0, "email":self.user_list[1]['email'], "password":self.user_list[1]['password']},
+				)
 			)
 		self.assertEqual(
-			response.status_code,
-			400,
-			"Incorrect response code for bad update"
+			response['status'],
+			False,
+			"Incorrect status when updating a user with an email that was already taken"
 			)
 
+	def test_delete_user_with_valid_key(self):
+		user = self.user_list[0]
+		response = json_response_to_dict(
+			post_request(
+				self,
+				self.url,
+				user
+				)
+			)
+		user_obj = User.objects.get(email=user['email'])
+		response = json_response_to_dict(
+			delete_request(
+				self,
+				self.url,
+				pk=user_obj.pk
+				)
+			)
+		self.assertEqual(
+			response['status'],
+			True,
+			"Incorrect status after delete call on valid id"
+			)
+		self.assertEqual(
+			len(User.objects.all()),
+			0,
+			"Incorrect number of users after deletion"
+			)
+		self.assertEqual(
+			authenticate(username=user['email'],password=user['password']),
+			None,
+			"User was able to login with deleted credentials"
+			)
+
+	def test_delete_user_with_invalid_key(self):
+		user = self.user_list[0]
+		response = json_response_to_dict(
+			post_request(
+				self,
+				self.url,
+				user,
+				)
+			)
+		user_obj = User.objects.get(email=user['email'])
+		response = json_response_to_dict(
+			delete_request(
+				self,
+				self.url,
+				342
+				)
+			)
+		self.assertEqual(
+			response['status'],
+			False,
+			"Incorrect status after delete call on invalid id"
+			)
+		self.assertEqual(
+			len(User.objects.all()),
+			1,
+			"Incorrect number of users after failed deletion"
+			)
+		self.assertEqual(
+			authenticate(username=user['email'],password=user['password']),
+			user_obj,
+			"User was unable to login after failed deletion"
+			)
+
+class test_school(TestCase):
+
+	school_list = [
+		{"name":"That other school", "city":"Blacksburg", "state":"Virginia"},
+		{"name":"University of Virginia", "city":"Charlottesville", "state":"Virginia"}
+		]
+	model = School
+	url = '/api/schools/'
+
+	def test_create_school(self):
+		school = self.school_list[0]
+		response = json_response_to_dict(
+			post_request(
+				self,
+				self.url,
+				school
+				)
+			)
+		self.assertEqual(
+			response["status"],
+			True
+			)
+		self.assertEqual(
+			len(self.model.objects.all()),
+			1
+			)
+		self.assertEqual(
+			response['response']['name'],
+			school['name']
+			)
+
+	def test_create_school_with_nonunique_name(self):
+		school = self.school_list[0]
+		status = post_request(
+			self,
+			self.url,
+			[school, school]
+			)
+		self.assertEqual(
+			status,
+			False,
+			"Incorrect response"
+			)

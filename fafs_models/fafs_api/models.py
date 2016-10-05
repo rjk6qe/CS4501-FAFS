@@ -70,9 +70,8 @@ class UserManager(BaseUserManager):
 			user = User.objects.get(pk=user_pk)
 			change = False
 			if email:
-				if self.clean_email(email):
-					user.email = email
-					change = True
+				user.email = self.clean_email(email)
+				change = True
 			if password:
 				user.set_password(password)
 				change = True
