@@ -4,6 +4,7 @@ from . import views
 
 urlpatterns = [
     url(r'^categories/$', views.get_categories, name='getCategories'),
+    url(r'^categories/(?P<pk>[0-9]+)/$', views.get_categories, name='getCategories'),
     url(r'^products/$', views.get_products, name='getProducts'),
     url(r'^products/(?P<pk>[0-9]+)/$', views.get_products, name='getProduct'),
     url(r'^products/latest/$', views.get_latest_products, name='getLatestProducts_default'),
