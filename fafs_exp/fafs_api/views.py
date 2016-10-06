@@ -4,6 +4,8 @@ import urllib.parse
 #import requests
 import json
 from django.http import HttpResponse, JsonResponse
+from django.utils import dateparse
+from django.contrib.humanize.templatetags.humanize import naturalday
 
 # Create your views here.
 API_URL = 'http://models-api:8000/api/'
@@ -39,20 +41,38 @@ def json_encode_dict_and_status(dictionary, status):
     response_dict["response"] = dictionary
     return response_dict
 
+DATE_FORMAT = '%b %d, %Y %H:%M %p'
+
+def obj_date_to_string(obj, field_list):
+    if isinstance(obj, dict):
+        for field in field_list:
+            str_datetime = dateparse.parse_datetime(obj[field])
+            obj[field + '_readable'] = str_datetime.strftime(DATE_FORMAT)
+    elif isinstance(obj, list):
+        for item in obj:
+            for field in field_list:
+                str_datetime = dateparse.parse_datetime(obj[field])
+                obj[field + '_readable'] = str_datetime.strftime(DATE_FORMAT)
+
 def get_categories(request, pk=None):
     path_list = ['categories',pk]
     response = get_request(path_list)
     return JsonResponse(response)
 
 def get_products(request, pk=None):
+    print('Getting products')
     path_list = ['products',pk]
     response = get_request(path_list)
-    return JsonResponse(response)
+    product_data = response['response']
+    obj_date_to_string(product_data, ['time_posted', 'time_updated'])
+
+    return JsonResponse(json_encode_dict_and_status(product_data, True))
 
 def get_latest_products(request, num=None):
     if num is None:
         num = 3
     response = get_request(['products',])
     product_data = response['response']
+    print(type(product_data))
     sorted_products = sorted(product_data, key = lambda x: x["time_posted"], reverse=True)[:int(num)]
     return JsonResponse(json_encode_dict_and_status(sorted_products, True))

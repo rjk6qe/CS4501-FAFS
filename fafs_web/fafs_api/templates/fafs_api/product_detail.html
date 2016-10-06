@@ -17,7 +17,7 @@
 <h2>Pick up:</h2>
 <p>{{ product.pick_up}}</p>
 <h2>Price: ${{ product.price | intcomma }}</h2>
-<h2>Date posted: {{ product.time_posted }}</h2>
-<h2>Date updated: {{ product.time_updated }}</h2>
+<h2>Date posted: {{ product.time_posted_readable }}</h2>
+<h2>Date updated: {{ product.time_updated_readable }}</h2>
 
 {% endblock %}
