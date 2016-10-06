@@ -6,7 +6,7 @@ import json
 from django.http import HttpResponse, JsonResponse
 
 # Create your views here.
-API_URL = 'http://models-api:8000/api/'
+API_URL = 'http://models-api:8000/api/v1/'
 
 
 def append_to_url(path_list):
