@@ -66,6 +66,11 @@ def get_products(request, pk=None):
     product_data = response['response']
     obj_date_to_string(product_data, ['time_posted', 'time_updated'])
 
+    path_list = ['categories', product_data['category_id']]
+    response = get_request(path_list)
+    category_data = response['response']
+    product_data['category_name'] = category_data['name']
+
     return JsonResponse(json_encode_dict_and_status(product_data, True))
 
 def get_latest_products(request, num=None):
