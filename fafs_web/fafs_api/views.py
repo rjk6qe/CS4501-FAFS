@@ -11,6 +11,21 @@ def make_request(path):
     resp_json = urllib.request.urlopen(req).read().decode('utf-8')
     return json.loads(resp_json)
 
+def append_to_url(path_list):
+    url = API_URL
+    if path_list is not None:
+        for path in path_list:
+            if path is not None:
+                url = url + str(path) + '/'
+    return url
+
+def get_request(path_list=None):
+    url = append_to_url(path_list)
+    #response = requests.get(url)
+    req = urllib.request.Request(url)
+    json_response = urllib.request.urlopen(req).read().decode('utf-8')
+    return json.loads(json_response)
+
 def index(request):
 
     print ("About to do the GET...")
@@ -30,3 +45,9 @@ def product_detail(request, pk):
     product_resp = make_request('products/' + pk)
     context_dict = {'categories': cat_resp, 'product': product_resp['response']}
     return render(request, 'fafs_api/product_detail.html', context_dict)
+
+def category_detail(request, pk):
+    cat_resp = get_request(['categories'])
+    this_category = get_request(['categories', pk])
+    context_dict = {'categories': cat_resp, 'category': this_category['response']}
+    return render(request, 'fafs_api/category_detail.html', context_dict)

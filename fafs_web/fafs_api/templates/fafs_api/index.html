@@ -3,7 +3,7 @@
 {% block side_block %}
     <ul class="nav nav-pills nav-stacked">
 	{% for category in categories.response %}
-	    <li role="presentation"> <a href="#">{{ category.name }} </a></li>
+	    <li role="presentation"> <a href="{% url 'category_detail' category.pk %}">{{ category.name }} </a></li>
 	{% endfor %}
     <ul>
 {% endblock %}

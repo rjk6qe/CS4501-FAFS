@@ -51,13 +51,26 @@ def obj_date_to_string(obj, field_list):
     elif isinstance(obj, list):
         for item in obj:
             for field in field_list:
-                str_datetime = dateparse.parse_datetime(obj[field])
-                obj[field + '_readable'] = str_datetime.strftime(DATE_FORMAT)
+                str_datetime = dateparse.parse_datetime(item[field])
+                item[field + '_readable'] = str_datetime.strftime(DATE_FORMAT)
 
 def get_categories(request, pk=None):
     path_list = ['categories',pk]
     response = get_request(path_list)
-    return JsonResponse(response)
+    if pk:
+        category_data = response['response']
+        path_list = ['products']
+        response = get_request(path_list)
+        product_data = response['response']
+        product_list = []
+        for product in product_data:
+            if product['category_id'] == int(pk):
+                product_list.append(product)
+        obj_date_to_string(product_list, ['time_posted', 'time_updated'])
+        category_data['product_list'] = product_list
+        return JsonResponse(json_encode_dict_and_status(category_data, True))
+    else:
+        return JsonResponse(response)
 
 def get_products(request, pk=None):
     print('Getting products')
