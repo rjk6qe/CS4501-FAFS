@@ -11,14 +11,14 @@ def json_response_to_dict(response):
 	return response.json()
 
 
-def post_request(self, url, data):
+def post_request(client, url, data):
 	status = True
 	if isinstance(data, list):
 		num_objs = len(data)
 		for i in range(0, num_objs):
 			obj = data[i]
 			response = json_response_to_dict(
-				self.client.post(
+				client.post(
 					url,
 					data=json.dumps(obj),
 					content_type="application/json"
@@ -27,7 +27,7 @@ def post_request(self, url, data):
 			status = status and response['status']
 		return status
 	elif isinstance(data, dict):
-		return self.client.post(
+		return client.post(
 			url,
 			data=json.dumps(data),
 			content_type="application/json"
@@ -35,26 +35,26 @@ def post_request(self, url, data):
 	else:
 		return None
 
-def get_request(self, url, pk=None):
+def get_request(client, url, pk=None):
 	get_url = url
 	if pk is not None:
 		get_url = get_url + str(pk) + '/'
-	return self.client.get(
+	return client.get(
 		get_url
 		)
 
-def patch_request(self, url, data):
-	return self.client.patch(
+def patch_request(client, url, data):
+	return client.patch(
 		url,
 		data=json.dumps(data),
 		content_type="application/json"
 		)
 
-def delete_request(self, url, pk=None):
+def delete_request(client, url, pk=None):
 	delete_url = url
 	if pk is not None:
 		delete_url = delete_url + str(pk) + '/'
-	return self.client.delete(
+	return client.delete(
 		delete_url
 		)
 
@@ -75,7 +75,7 @@ class test_user(TestCase):
 		]
 	required_models = [School,]
 	required_model_fields = {str(School):school_values}
-	url = "/api/users/"
+	url = "/api/v1/users/"
 
 	def setUp(self):
 		for model in self.required_models:
@@ -85,7 +85,7 @@ class test_user(TestCase):
 		user = self.user_list[0]
 		response = json_response_to_dict(
 			post_request(
-				self,
+				self.client,
 				self.url,
 				data=user
 				)
@@ -104,15 +104,15 @@ class test_user(TestCase):
 	def test_create_user_with_nonunique_email(self):
 		user = self.user_list[0]
 		post_request(
-			self,
+			self.client,
 			self.url,
-			data=user
+			user
 			)
 		response = json_response_to_dict(
 			post_request(
-				self,
+				self.client,
 				self.url,
-				data=user,
+				user,
 				)
 			)
 		self.assertEqual(
@@ -124,15 +124,15 @@ class test_user(TestCase):
 		user = self.user_list[0]
 		response = json_response_to_dict(
 			post_request(
-				self,
+				self.client,
 				self.url,
-				data=user
+				user
 				)
 			)
 		user_id = response['response']['pk']
 		response = json_response_to_dict(
 			get_request(
-				self,
+				self.client,
 				self.url,
 				pk=user_id
 				)
@@ -152,7 +152,7 @@ class test_user(TestCase):
 		user = self.user_list[0]
 		response = json_response_to_dict(
 			post_request(
-				self,
+				self.client,
 				self.url,
 				user,
 				)
@@ -160,7 +160,7 @@ class test_user(TestCase):
 		user_id = response['response']['pk']
 		response = json_response_to_dict(
 			get_request(
-				self,
+				self.client,
 				self.url,
 				pk=13
 				)
@@ -174,13 +174,13 @@ class test_user(TestCase):
 	def test_get_multiple_users(self):
 		num_users = len(self.user_list)
 		post_request(
-			self,
+			self.client,
 			self.url,
 			self.user_list
 			)
 		response = json_response_to_dict(
 			get_request(
-				self,
+				self.client,
 				self.url
 				)
 			)
@@ -194,7 +194,7 @@ class test_user(TestCase):
 		user = self.user_list[0]
 		response = json_response_to_dict(
 			post_request(
-				self,
+				self.client,
 				self.url,
 				user
 				)
@@ -204,7 +204,7 @@ class test_user(TestCase):
 		user_id = response['response']['pk']
 		response = json_response_to_dict(
 			patch_request(
-				self,
+				self.client,
 				self.url,
 				{"user_pk":user_id,
 				"email":self.user_list[1]['email'],
@@ -230,13 +230,13 @@ class test_user(TestCase):
 	def test_update_user_with_invalid_email(self):
 		num_users = len(self.user_list)
 		post_request(
-			self,
+			self.client,
 			self.url,
 			self.user_list
 			)
 		response = json_response_to_dict(
 			patch_request(
-				self,
+				self.client,
 				self.url,
 				{"pk":0, "email":self.user_list[1]['email'], "password":self.user_list[1]['password']},
 				)
@@ -251,7 +251,7 @@ class test_user(TestCase):
 		user = self.user_list[0]
 		response = json_response_to_dict(
 			post_request(
-				self,
+				self.client,
 				self.url,
 				user
 				)
@@ -259,7 +259,7 @@ class test_user(TestCase):
 		user_obj = User.objects.get(email=user['email'])
 		response = json_response_to_dict(
 			delete_request(
-				self,
+				self.client,
 				self.url,
 				pk=user_obj.pk
 				)
@@ -284,7 +284,7 @@ class test_user(TestCase):
 		user = self.user_list[0]
 		response = json_response_to_dict(
 			post_request(
-				self,
+				self.client,
 				self.url,
 				user,
 				)
@@ -292,7 +292,7 @@ class test_user(TestCase):
 		user_obj = User.objects.get(email=user['email'])
 		response = json_response_to_dict(
 			delete_request(
-				self,
+				self.client,
 				self.url,
 				342
 				)
@@ -320,13 +320,13 @@ class test_school(TestCase):
 		{"name":"University of Virginia", "city":"Charlottesville", "state":"Virginia"}
 		]
 	model = School
-	url = '/api/schools/'
+	url = '/api/v1/schools/'
 
 	def test_create_school(self):
 		school = self.school_list[0]
 		response = json_response_to_dict(
 			post_request(
-				self,
+				self.client,
 				self.url,
 				school
 				)
@@ -347,7 +347,7 @@ class test_school(TestCase):
 	def test_create_school_with_nonunique_name(self):
 		school = self.school_list[0]
 		status = post_request(
-			self,
+			self.client,
 			self.url,
 			[school, school]
 			)
@@ -356,3 +356,47 @@ class test_school(TestCase):
 			False,
 			"Incorrect response"
 			)
+		self.assertEqual(
+			len(School.objects.all()),
+			1,
+			"Incorrect number of school objects"
+			)
+
+	def test_get_school_by_id(self):
+		school = self.school_list[0]
+		post_request(
+			self.client,
+			self.url,
+			school
+			)
+		response = json_response_to_dict(
+			get_request(
+				self.client,
+				self.url,
+				pk=1
+				)
+			)
+		self.assertEqual(
+			response['response']['name'],
+			school['name'],
+			"Incorrect school name"
+			)
+
+	def test_get_all_schools(self):
+		post_request(
+			self.client,
+			self.url,
+			self.school_list
+			)
+		response = json_response_to_dict(
+			get_request(
+				self.client,
+				self.url
+				)
+			)
+		self.assertEqual(
+			len(response['response']),
+			len(self.school_list),
+			"Incorrect number of schools"
+			)
+
