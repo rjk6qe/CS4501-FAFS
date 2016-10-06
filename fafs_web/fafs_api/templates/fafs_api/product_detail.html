@@ -14,6 +14,7 @@
 <h1>{{ product.name }}</h1>
 <h2>Category: <a href="{% url 'category_detail' product.category_id %}">{{ product.category_name }}</a></h2>
 <p>{{ product.description }}</p>
+<h2>Contact: {{ product.owner.email }}</h2>
 <h2>Pick up:</h2>
 <p>{{ product.pick_up}}</p>
 <h2>Price: ${{ product.price | intcomma }}</h2>
