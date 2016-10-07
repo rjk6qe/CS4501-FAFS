@@ -8,8 +8,7 @@ import json
 # Create your tests here.
 
 def json_response_to_dict(response):
-	return response.json()
-
+	return json.loads(response.content.decode('utf-8'))
 
 def post_request(client, url, data):
 	status = True
@@ -27,11 +26,12 @@ def post_request(client, url, data):
 			status = status and response['status']
 		return status
 	elif isinstance(data, dict):
-		return client.post(
+		r = client.post(
 			url,
 			data=json.dumps(data),
 			content_type="application/json"
 			)
+		return r
 	else:
 		return None
 
@@ -60,11 +60,12 @@ def delete_request(client, url, pk=None):
 
 def create_model(model, data):
 	if model == School:
-		School.objects.create(
+		s = School.objects.get_or_create(
 			name=data['name'],
 			city=data['city'],
 			state=data['state']
 			)
+		return s
 
 class test_user(TestCase):
 
@@ -78,11 +79,11 @@ class test_user(TestCase):
 	url = "/api/v1/users/"
 
 	def setUp(self):
-		for model in self.required_models:
-			create_model(model, self.required_model_fields[str(model)])
+		create_model(School, self.school_values)
 
 	def test_create_user(self):
 		user = self.user_list[0]
+		user['school_id'] = School.objects.get().pk
 		response = json_response_to_dict(
 			post_request(
 				self.client,
@@ -103,6 +104,7 @@ class test_user(TestCase):
 
 	def test_create_user_with_nonunique_email(self):
 		user = self.user_list[0]
+		user['school_id'] = School.objects.get().pk
 		post_request(
 			self.client,
 			self.url,
@@ -122,6 +124,7 @@ class test_user(TestCase):
 
 	def test_get_user_by_id(self):
 		user = self.user_list[0]
+		user['school_id'] = School.objects.get().pk
 		response = json_response_to_dict(
 			post_request(
 				self.client,
@@ -150,11 +153,12 @@ class test_user(TestCase):
 
 	def test_get_user_with_incorrect_id(self):
 		user = self.user_list[0]
+		user['school_id'] = School.objects.get().pk
 		response = json_response_to_dict(
 			post_request(
 				self.client,
 				self.url,
-				user,
+				data=user,
 				)
 			)
 		user_id = response['response']['pk']
@@ -173,6 +177,8 @@ class test_user(TestCase):
 
 	def test_get_multiple_users(self):
 		num_users = len(self.user_list)
+		for i in self.user_list:
+			i['school_id'] = School.objects.get().pk
 		post_request(
 			self.client,
 			self.url,
@@ -192,6 +198,7 @@ class test_user(TestCase):
 
 	def test_update_user_with_valid_email(self):
 		user = self.user_list[0]
+		user['school_id'] = School.objects.get().pk
 		response = json_response_to_dict(
 			post_request(
 				self.client,
@@ -229,6 +236,8 @@ class test_user(TestCase):
 
 	def test_update_user_with_invalid_email(self):
 		num_users = len(self.user_list)
+		for i in self.user_list:
+			i['school_id'] = School.objects.get().pk
 		post_request(
 			self.client,
 			self.url,
@@ -249,6 +258,7 @@ class test_user(TestCase):
 
 	def test_delete_user_with_valid_key(self):
 		user = self.user_list[0]
+		user['school_id'] = School.objects.get().pk
 		response = json_response_to_dict(
 			post_request(
 				self.client,
@@ -282,6 +292,7 @@ class test_user(TestCase):
 
 	def test_delete_user_with_invalid_key(self):
 		user = self.user_list[0]
+		user['school_id'] = School.objects.get().pk
 		response = json_response_to_dict(
 			post_request(
 				self.client,
@@ -364,17 +375,30 @@ class test_school(TestCase):
 
 	def test_get_school_by_id(self):
 		school = self.school_list[0]
-		post_request(
-			self.client,
-			self.url,
-			school
+		response = json_response_to_dict(
+			post_request(
+				self.client,
+				self.url,
+				school
+				)
 			)
+		self.assertEqual(
+			response['status'],
+			True,
+			"incorrect response"
+			)
+		school_pk = School.objects.get(name=response['response']['name']).pk
 		response = json_response_to_dict(
 			get_request(
 				self.client,
 				self.url,
-				pk=1
+				pk=school_pk
 				)
+			)
+		self.assertEqual(
+			response['status'],
+			True,
+			"Incorrect response"
 			)
 		self.assertEqual(
 			response['response']['name'],
