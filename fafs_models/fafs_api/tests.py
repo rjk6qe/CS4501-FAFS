@@ -1,6 +1,6 @@
 from django.test import TestCase
 from django.contrib.auth import authenticate
-from fafs_api.models import User, School, UserManager, Category
+from fafs_api.models import User, School, UserManager, Category, Product
 from fafs_api.admin import authenticate
 
 import json
@@ -66,6 +66,19 @@ def create_model(model, data):
 			state=data['state']
 			)
 		return s
+	if model == User:
+		u = User.objects.get_or_create(
+			email=data['email'],
+			password=data['password'],
+			school_id=School.objects.get()
+		)
+		return u
+	if model == Category:
+		c = Category.objects.get_or_create(
+			name=data['name'],
+			description=data['description']
+		)
+		return c
 
 class test_user(TestCase):
 
@@ -514,3 +527,153 @@ class test_category(TestCase):
 			len(self.category_list),
 			"Incorrect number of categories"
 			)
+
+class test_product(TestCase):
+	school_values = {"name":"University of Virginia", "city":"Charlottesville", "state":"Virginia"}
+	user_list = [
+		{"email":"gmail@gmail.com", "password":"password1","school_id":"1"}
+	]
+	category_list = [
+		{"name":"Furniture", "description":"Stuff you put in your house"},
+		{"name":"Clothing", "description":"Stuff you wear"}
+	]
+	product_list = [
+	{
+		"name":"Queen Mattress",
+		"description":"Queen size mattress, never used.",
+		"category_id":"1",
+		"price":"300",
+		"owner_id":"1",
+		"time_posted":"2016-09-01T13:10:30",
+		"time_updated":"2016-09-19T13:20:30",
+		"pick_up":"pick up in the alley behind pigeonhole",
+		"status":"N"
+	},
+	{
+		"name":"White pants",
+		"description":"Men's pants. White. 33x30.",
+		"category_id":"1",
+		"price":"15",
+		"owner_id":"1",
+		"time_posted":"2016-10-02T13:00:30",
+		"time_updated":"2016-10-10T13:20:30",
+		"pick_up":"pick up at crossroads",
+		"status":"UP"
+	}
+	]
+	model = Product
+	url = '/api/v1/products/'
+
+	def setUp(self):
+		create_model(School, self.school_values)
+		create_model(User, self.user_list[0])
+		create_model(Category, self.category_list[0])
+
+
+	def test_create_product(self):
+		product = self.product_list[0]
+		product['owner_id'] = User.objects.get().pk
+		product['category_id'] = Category.objects.get().pk
+
+		response = json_response_to_dict(
+			post_request(
+				self.client,
+				self.url,
+				product
+				)
+			)
+		self.assertEqual(
+			response["status"],
+			True,
+			response['response']
+			)
+		self.assertEqual(
+			len(self.model.objects.all()),
+			1
+			)
+		self.assertEqual(
+			response['response']['name'],
+			product['name'],
+			"Wrong product name"
+			)
+		self.assertEqual(
+			response['response']['description'],
+			product['description'],
+			"Wrong product description"
+		)
+		self.assertEqual(
+			response['response']['pick_up'],
+			product['pick_up'],
+			"Wrong product pick up location"
+		)
+
+	def test_get_product_by_id(self):
+		product = self.product_list[0]
+		product['owner_id'] = User.objects.get().pk
+		product['category_id'] = Category.objects.get().pk
+
+		response = json_response_to_dict(
+			post_request(
+				self.client,
+				self.url,
+				product
+				)
+			)
+		self.assertEqual(
+			response['status'],
+			True,
+			response['response']
+			#"incorrect response"
+			)
+		product_pk = Product.objects.get(name=response['response']['name']).pk
+		response = json_response_to_dict(
+			get_request(
+				self.client,
+				self.url,
+				pk=product_pk
+				)
+			)
+		self.assertEqual(
+			response['status'],
+			True,
+			"Incorrect response"
+			)
+		self.assertEqual(
+			response['response']['name'],
+			product['name'],
+			"Wrong product name"
+			)
+		self.assertEqual(
+			response['response']['description'],
+			product['description'],
+			"Wrong product description"
+		)
+		self.assertEqual(
+			'time_posted' in response['response'].keys(),
+			True,
+			"time not posted"
+		)
+		self.assertEqual(
+			response['response']['pick_up'],
+			product['pick_up'],
+			"Wrong product pick up location"
+		)
+	"""
+	def test_get_all_products(self):
+		post_request(
+			self.client,
+			self.url,
+			self.product_list
+			)
+		response = json_response_to_dict(
+			get_request(
+				self.client,
+				self.url
+				)
+			)
+		self.assertEqual(
+			len(response['response']),
+			len(self.product_list),
+			"Incorrect number of products"
+			)
+	"""
