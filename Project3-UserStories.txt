@@ -1,6 +1,5 @@
-1. As a user, I want to see available new items on the home page.
-2. As a user, I want a separate item details page.  
-3. As a user, I want to see when a product was posted on the item details page.
-4. As a user, I want to see contact information, such as telephone numbers and email, on the item details page. 
-5. As a user, I want to see pickup location on the item details page. 
-6. As a user, I want to be able to see a categories panel. 
+1. As a user, I want to see available new items on the home page. 
+2. As a user, I want to see when a product was posted on the item details page. --Tested by test_get_product_by_id(self):
+3. As a user, I want to see the status of a product on the item details page. --Tested by test_get_product_by_id(self):
+4. As a user, I want to see pickup location on the item details page. --Tested by test_get_product_by_id(self):
+5. As a user, I want to be able to see a categories panel. --Tested by test_get_all_categories(self).
