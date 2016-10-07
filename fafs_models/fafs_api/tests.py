@@ -1,6 +1,6 @@
 from django.test import TestCase
 from django.contrib.auth import authenticate
-from fafs_api.models import User, School, UserManager
+from fafs_api.models import User, School, UserManager, Category
 from fafs_api.admin import authenticate
 
 import json
@@ -424,3 +424,93 @@ class test_school(TestCase):
 			"Incorrect number of schools"
 			)
 
+class test_category(TestCase):
+
+	category_list = [
+		{"name":"Furniture", "description":"Stuff you put in your house"},
+		{"name":"Clothing", "description":"Stuff you wear"}
+		]
+	model = Category
+	url = '/api/v1/categories/'
+
+	def test_create_category(self):
+		category = self.category_list[0]
+		response = json_response_to_dict(
+			post_request(
+				self.client,
+				self.url,
+				category
+				)
+			)
+		self.assertEqual(
+			response["status"],
+			True
+			)
+		self.assertEqual(
+			len(self.model.objects.all()),
+			1
+			)
+		self.assertEqual(
+			response['response']['name'],
+			category['name']
+			)
+		self.assertEqual(
+			response['response']['description'],
+			category['description']
+		)
+
+	def test_get_category_by_id(self):
+		category = self.category_list[0]
+		response = json_response_to_dict(
+			post_request(
+				self.client,
+				self.url,
+				category
+				)
+			)
+		self.assertEqual(
+			response['status'],
+			True,
+			"incorrect response"
+			)
+		category_pk = Category.objects.get(name=response['response']['name']).pk
+		response = json_response_to_dict(
+			get_request(
+				self.client,
+				self.url,
+				pk=category_pk
+				)
+			)
+		self.assertEqual(
+			response['status'],
+			True,
+			"Incorrect response"
+			)
+		self.assertEqual(
+			response['response']['name'],
+			category['name'],
+			"Incorrect category name"
+			)
+		self.assertEqual(
+			response['response']['description'],
+			category['description'],
+			"Incorrect category description"
+			)
+
+	def test_get_all_categories(self):
+		post_request(
+			self.client,
+			self.url,
+			self.category_list
+			)
+		response = json_response_to_dict(
+			get_request(
+				self.client,
+				self.url
+				)
+			)
+		self.assertEqual(
+			len(response['response']),
+			len(self.category_list),
+			"Incorrect number of categories"
+			)
