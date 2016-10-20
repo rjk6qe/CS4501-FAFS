@@ -35,6 +35,9 @@ def json_encode_dict_and_status(dictionary, status):
 	response_dict["response"] = dictionary
 	return response_dict
 
+def LoginView(View):
+	pass
+
 class UserView(View):
 	required_fields = ['email', 'school_id', 'password']
 	update_fields = ['user_pk','email','password']
@@ -66,7 +69,7 @@ class UserView(View):
 			status = True
 			queryset = self.model.objects.all()
 			json_data = list(queryset.values('pk','email','school_id','rating'))
-		
+
 		return JsonResponse(json_encode_dict_and_status(json_data, status))
 
 	def post(self, request):

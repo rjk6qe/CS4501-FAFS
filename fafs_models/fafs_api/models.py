@@ -2,6 +2,10 @@ from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 from django.core.exceptions import ValidationError
 
+import os
+import hmac
+from django.conf import settings
+
 class School(models.Model):
 	name = models.CharField(max_length=75, unique=True)
 	city = models.CharField(max_length=50)
@@ -109,7 +113,26 @@ class User(AbstractBaseUser):
 				)
 		except User.DoesNotExist:
 			pass #this is desired
-	
+
+def get_authenticator_token():
+	while True:
+		authenticator = hmac.new(key = settings.SECRET_KEY.encode('utf-8'), msg = os.urandom(32), digestmod = 'sha256').hexdigest()
+		try:
+			dup_test = Authenticator.objects.get(token=authenticator)
+		except Authenticator.DoesNotExist:
+			dup_test = None
+		if dup_test is None:
+			break
+
+	return authenticator
+
+class Authenticator(models.Model):
+	token = models.CharField(max_length=255,
+							primary_key=True,
+							default=get_authenticator_token)
+	email = models.ForeignKey(User)
+	date_created = models.DateField(auto_now_add=True)
+
 class Category(models.Model):
 	name = models.CharField(max_length=50)
 	description = models.TextField(max_length=500)
