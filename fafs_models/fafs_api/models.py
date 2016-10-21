@@ -1,7 +1,7 @@
 from django.db import models
-from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
+#from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 from django.core.exceptions import ValidationError
-
+from django.contrib.auth import hashers
 import os
 import hmac
 from django.conf import settings
@@ -33,7 +33,7 @@ class Address(models.Model):
 	description = models.CharField(max_length=300)
 	address_2 = models.CharField(max_length=300)
 
-class UserManager(BaseUserManager):
+class UserManager(models.Manager):
 
 	def clean_school(self, school_id):
 		try:
@@ -55,10 +55,10 @@ class UserManager(BaseUserManager):
 
 	def create_user(self, email=None, school=None, password=None):
 		u = self.model(
-			email=UserManager.normalize_email(email),
+			email=self.clean_email(email),
+			password=hashers.make_password(password),
 			school_id=self.clean_school(school)
 			)
-		u.set_password(password)
 		u.clean()
 		u.save()
 		return u
@@ -91,9 +91,10 @@ class UserManager(BaseUserManager):
 				"Error":"Invalid user id" + str(user_pk)
 				})
 
-class User(AbstractBaseUser):
+class User(models.Model):
 	school_id = models.ForeignKey(School)
 	email = models.EmailField(unique=True, blank=False)
+	password = models.CharField(max_length=255, blank=False)
 	rating = models.IntegerField(blank=True, null=True)
 	phone_number = models.CharField(max_length=20, blank=True)
 
@@ -130,7 +131,7 @@ class Authenticator(models.Model):
 	token = models.CharField(max_length=255,
 							primary_key=True,
 							default=get_authenticator_token)
-	email = models.ForeignKey(User)
+	user = models.ForeignKey(User)
 	date_created = models.DateField(auto_now_add=True)
 
 class Category(models.Model):

@@ -2,13 +2,13 @@ from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, get_object_or_404
 from django.views.generic import View
 from django.core.exceptions import ValidationError
-
+from django.contrib.auth import hashers
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 
 import json
 
-from fafs_api.models import User, Address, School, Category, Product, Transaction
+from fafs_api.models import User, Address, School, Category, Product, Transaction, Authenticator
 
 def get_key(dictionary, key):
 	try:
@@ -35,8 +35,39 @@ def json_encode_dict_and_status(dictionary, status):
 	response_dict["response"] = dictionary
 	return response_dict
 
-def LoginView(View):
-	pass
+class LoginView(View):
+	model = User
+	required_fields = ['email', 'password']
+
+	@method_decorator(csrf_exempt)
+	def dispatch(self, request, *args, **kwargs):
+		return super(LoginView, self).dispatch(request, *args, **kwargs)
+
+	def post(self, request):
+		status = False
+		json_data = json.loads(request.body.decode('utf-8'))
+		field_dict = retrieve_all_fields(
+						json_data,
+						self.required_fields
+					)
+		json_data = {"message": "Invalid login"}
+		try:
+			login_user = User.objects.get(email=field_dict['email'])
+			hashed_password = login_user.password
+			if hashers.check_password(field_dict['password'], hashed_password):
+				authenticator = Authenticator()
+				authenticator.user = login_user
+				authenticator.save()
+				json_data = {
+					"token": authenticator.token,
+					"email": authenticator.user.email,
+					"date_created": authenticator.date_created
+				}
+				status = True
+		except User.DoesNotExist:
+			pass
+		return JsonResponse(json_encode_dict_and_status(json_data, status))
+
 
 class UserView(View):
 	required_fields = ['email', 'school_id', 'password']
