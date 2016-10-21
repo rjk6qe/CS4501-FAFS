@@ -4,6 +4,7 @@ from fafs_api import views
 
 urlpatterns = [
 	url(r'^login/$', views.LoginView.as_view(), name='login'),
+	url(r'^logout/$', views.LogoutView.as_view(), name='logout'),
 	url(r'^users/$', views.UserView.as_view(), name='users'),
 	url(r'^users/(?P<pk>[0-9]+)/$', views.UserView.as_view(), name='users'),
 	url(r'^addresses/$', views.AddressView.as_view(), name='addresses'),

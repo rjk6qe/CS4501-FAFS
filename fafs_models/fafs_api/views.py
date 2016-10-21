@@ -68,6 +68,30 @@ class LoginView(View):
 			pass
 		return JsonResponse(json_encode_dict_and_status(json_data, status))
 
+class LogoutView(View):
+	required_fields = ['authenticator']
+
+	@method_decorator(csrf_exempt)
+	def dispatch(self, request, *args, **kwargs):
+		return super(LogoutView, self).dispatch(request, *args, **kwargs)
+
+	def post(self, request):
+		status = False
+		json_data = json.loads(request.body.decode('utf-8'))
+		field_dict = retrieve_all_fields(
+						json_data,
+						self.required_fields
+					)
+		try:
+			auth = Authenticator.objects.get(token=field_dict['authenticator'])
+			auth.delete()
+			status = True
+			json_data = {}
+		except Authenticator.DoesNotExist:
+			status = False
+			json_data = {'message': 'Invalid authenticator'}
+		return JsonResponse(json_encode_dict_and_status(json_data, status))
+
 
 class UserView(View):
 	required_fields = ['email', 'school_id', 'password']
