@@ -101,3 +101,13 @@ def get_latest_products(request, num=None):
     print(type(product_data))
     sorted_products = sorted(product_data, key = lambda x: x["time_posted"], reverse=True)[:int(num)]
     return JsonResponse(json_encode_dict_and_status(sorted_products, True))
+
+
+def register_user(request):
+    #response = post_request(['users',])
+    post_data = {"email": "tanul@email.com", "password": "password555", "school_id": "1", "phone_number": "555-555-5555", "pk" : "9"}
+    post_encoded = urllib.parse.urlencode(post_data).encode('utf-8')
+    req = urllib.request.Request('http://models-api:8000/api/v1/users/', data=post_encoded, method='POST')
+    resp_json = urllib.request.urlopen(req).read()
+    #resp = json.loads(resp_json)
+    return JsonResponse(json_encode_dict_and_status(post_data, True))
