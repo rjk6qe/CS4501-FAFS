@@ -132,7 +132,7 @@ class Authenticator(models.Model):
 							primary_key=True,
 							default=get_authenticator_token)
 	user = models.ForeignKey(User)
-	date_created = models.DateField(auto_now_add=True)
+	date_created = models.DateTimeField(auto_now_add=True)
 
 class Category(models.Model):
 	name = models.CharField(max_length=50)

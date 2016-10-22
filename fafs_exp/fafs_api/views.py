@@ -12,7 +12,6 @@ from django.utils.decorators import method_decorator
 # Create your views here.
 API_URL = 'http://models-api:8000/api/v1/'
 
-
 def append_to_url(path_list):
     url = API_URL
     if path_list is not None:
@@ -37,10 +36,7 @@ def post_request(path_list, data):
     url = append_to_url(path_list)
     post_encoded = urllib.parse.urlencode(data).encode('utf-8')
     req = requests.post(url, json=data)
-    #req = urllib.request.Request(url, data=post_encoded, method='POST')
     json_response = req.json()
-    #urllib.request.urlopen(req).read().decode('utf-8')
-    #return json.loads(json_response)
     return json_response
 
 def json_encode_dict_and_status(dictionary, status):
@@ -66,7 +62,6 @@ def obj_date_to_string(obj, field_list):
 def login(request):
     if request.method == 'POST':
         json_data = json.loads(request.body.decode('utf-8'))
-
         email = json_data.get('email', None)
         password = json_data.get('password', None)
         post_data = {
@@ -75,7 +70,6 @@ def login(request):
         }
 
         if email and password:
-            print("making request")
             response = post_request(['login'], post_data)
             if response['status']:
                 authenticator = {"authenticator": response['response']['token']}
@@ -84,7 +78,31 @@ def login(request):
                 return JsonResponse(response)
         else:
             data = {"message": "Missing email/password"}
-            return JsonResponse(data, False)
+            return JsonResponse(json_encode_dict_and_status(data, False))
+    json_data = {"message": "Must be a POST request"}
+    return JsonResponse(json_encode_dict_and_status(json_data, False))
+
+@csrf_exempt
+def logout(request):
+    if request.method == 'POST':
+        json_data = json.loads(request.body.decode('utf-8'))
+        authenticator = json_data.get('authenticator', None)
+        post_data = {
+            'authenticator': authenticator
+        }
+        if authenticator:
+            response = post_request(['logout'], post_data)
+            if response['status']:
+                json_data = {"message": "logout success"}
+                return JsonResponse(json_encode_dict_and_status(json_data, True))
+            else:
+                return JsonResponse(response)
+        else:
+            json_data = {"message": "Missing authenticator"}
+            return JsonResponse(json_encode_dict_and_status(json_data, False))
+    json_data = {"message": "Must be a POST request"}
+    return JsonResponse(json_encode_dict_and_status(json_data, False))
+
 
 def get_categories(request, pk=None):
     path_list = ['categories',pk]
@@ -147,7 +165,7 @@ def register_user(request):
         phone_number = json_data.get('phone_number', None)
         post_data = {
             'email': email,
-            'school' : school, 
+            'school' : school,
             'password': password,
             'phone_number' : phone_number
         }

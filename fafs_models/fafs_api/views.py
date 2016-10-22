@@ -5,7 +5,7 @@ from django.core.exceptions import ValidationError
 from django.contrib.auth import hashers
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
-
+from datetime import datetime, timezone
 import json
 
 from fafs_api.models import User, Address, School, Category, Product, Transaction, Authenticator
@@ -35,6 +35,23 @@ def json_encode_dict_and_status(dictionary, status):
 	response_dict["response"] = dictionary
 	return response_dict
 
+def get_valid_authenticator(token):
+	"""
+	Returns a valid authenticator based on the token
+	or None if invalid token or authenticator expired
+	"""
+	try:
+		auth = Authenticator.objects.get(token=token)
+		time_diff = datetime.now(timezone.utc) - auth.date_created
+		if time_diff.seconds > 3600:
+			auth.delete()
+			return None
+		else:
+			return auth
+
+	except Authenticator.DoesNotExist:
+		return None
+
 class LoginView(View):
 	model = User
 	required_fields = ['email', 'password']
@@ -44,20 +61,24 @@ class LoginView(View):
 		return super(LoginView, self).dispatch(request, *args, **kwargs)
 
 	def post(self, request):
-		print("login request!")
 		status = False
-		print(json.loads(request.body.decode('utf-8')))
 		json_data = json.loads(request.body.decode('utf-8'))
-		print("Json data:", json_data)
 		field_dict = retrieve_all_fields(
 						json_data,
 						self.required_fields
 					)
+
 		json_data = {"message": "Invalid login"}
+
 		try:
 			login_user = User.objects.get(email=field_dict['email'])
+			# Check password
 			hashed_password = login_user.password
 			if hashers.check_password(field_dict['password'], hashed_password):
+				# Remove any old authenticators associated with user
+				old_authenticators = Authenticator.objects.filter(user=login_user)
+				old_authenticators.delete()
+				# Create new authenticator
 				authenticator = Authenticator()
 				authenticator.user = login_user
 				authenticator.save()
@@ -86,15 +107,18 @@ class LogoutView(View):
 						self.required_fields
 					)
 		try:
-			auth = Authenticator.objects.get(token=field_dict['authenticator'])
-			auth.delete()
-			status = True
-			json_data = {}
+			auth = get_valid_authenticator(token=field_dict['authenticator'])
+			if auth:
+				auth.delete()
+				status = True
+				json_data = {"message": "success"}
+			else:
+				status = False
+				json_data = {'message': 'Invalid authenticator'}
 		except Authenticator.DoesNotExist:
 			status = False
 			json_data = {'message': 'Invalid authenticator'}
 		return JsonResponse(json_encode_dict_and_status(json_data, status))
-
 
 class UserView(View):
 	required_fields = ['email', 'school_id', 'password']
