@@ -47,6 +47,7 @@ def post_request(path_list, data):
     json_response = req.json()
     return json_response
 
+
 def index(request):
 
     cat_req = urllib.request.Request(API_URL + 'categories/')

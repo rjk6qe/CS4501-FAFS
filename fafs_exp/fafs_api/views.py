@@ -102,6 +102,25 @@ def logout(request):
     json_data = {"message": "Must be a POST request"}
     return JsonResponse(json_encode_dict_and_status(json_data, False))
 
+@csrf_exempt
+def validate_auth(request):
+    if request.method == 'POST':
+        json_data = json.loads(request.body.decode('utf-8'))
+        authenticator = json_data.get('authenticator', None)
+        post_data = {
+            'authenticator': authenticator
+        }
+        if authenticator:
+            response = post_request(['auth'], post_data)
+            return JsonResponse(response)
+            
+        else:
+            json_data = {"message": "Missing authenticator"}
+            return JsonResponse(json_encode_dict_and_status(json_data, False))
+    json_data = {"message": "Must be a POST request"}
+    return JsonResponse(json_encode_dict_and_status(json_data, False))
+
+
 
 def get_categories(request, pk=None):
     path_list = ['categories',pk]

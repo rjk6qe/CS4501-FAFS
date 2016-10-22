@@ -12,4 +12,5 @@ urlpatterns = [
     url(r'^products/latest/$', views.get_latest_products, name='getLatestProducts_default'),
     url(r'^products/latest/(?P<num>[0-9]*)/$', views.get_latest_products, name='getLatestProducts'),
     url(r'^register/$', views.register_user, name='registerUser'),
+    url(r'^validate_auth/$', views.validate_auth, name='validate_auth'),
 ]
