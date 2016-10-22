@@ -23,8 +23,9 @@
             {% for field in user_form.visible_fields %}
                 {{ field.errors }}
                 {{ field.help_text }}
-                {{ field }}
-		<br> 
+		{{ field.label_tag }}
+                <p> {{ field }} </p>
+		
             {% endfor %}
 
             <input type="submit" name="submit" class="btn btn-default" value="Register" />
