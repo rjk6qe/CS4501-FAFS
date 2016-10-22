@@ -26,7 +26,7 @@ exp:
     - "8002:8000"
   volumes:
     - "./fafs_exp:/app"
-  command: "mod_wsgi-express start-server --reload-on-changes fafs_exp/wsgi.py"
+  command: bash -c "pip install requests && mod_wsgi-express start-server --reload-on-changes fafs_exp/wsgi.py"
 
 web:
   image: tp33/django

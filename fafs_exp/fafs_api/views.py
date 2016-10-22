@@ -1,11 +1,13 @@
 from django.shortcuts import render
 import urllib.request
 import urllib.parse
-#import requests
+import requests
 import json
 from django.http import HttpResponse, JsonResponse
 from django.utils import dateparse
 from django.contrib.humanize.templatetags.humanize import naturalday
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
 
 # Create your views here.
 API_URL = 'http://models-api:8000/api/v1/'
@@ -33,7 +35,13 @@ def get_request(path_list=None):
 
 def post_request(path_list, data):
     url = append_to_url(path_list)
-    return response.json()
+    post_encoded = urllib.parse.urlencode(data).encode('utf-8')
+    req = requests.post(url, json=data)
+    #req = urllib.request.Request(url, data=post_encoded, method='POST')
+    json_response = req.json()
+    #urllib.request.urlopen(req).read().decode('utf-8')
+    #return json.loads(json_response)
+    return json_response
 
 def json_encode_dict_and_status(dictionary, status):
     response_dict = {}
@@ -53,6 +61,30 @@ def obj_date_to_string(obj, field_list):
             for field in field_list:
                 str_datetime = dateparse.parse_datetime(item[field])
                 item[field + '_readable'] = str_datetime.strftime(DATE_FORMAT)
+
+@csrf_exempt
+def login(request):
+    if request.method == 'POST':
+        json_data = json.loads(request.body.decode('utf-8'))
+
+        email = json_data.get('email', None)
+        password = json_data.get('password', None)
+        post_data = {
+            'email': email,
+            'password': password
+        }
+
+        if email and password:
+            print("making request")
+            response = post_request(['login'], post_data)
+            if response['status']:
+                authenticator = {"authenticator": response['response']['token']}
+                return JsonResponse(json_encode_dict_and_status(authenticator, True))
+            else:
+                return JsonResponse(response)
+        else:
+            data = {"message": "Missing email/password"}
+            return JsonResponse(data, False)
 
 def get_categories(request, pk=None):
     path_list = ['categories',pk]

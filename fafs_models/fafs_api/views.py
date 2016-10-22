@@ -44,8 +44,11 @@ class LoginView(View):
 		return super(LoginView, self).dispatch(request, *args, **kwargs)
 
 	def post(self, request):
+		print("login request!")
 		status = False
+		print(json.loads(request.body.decode('utf-8')))
 		json_data = json.loads(request.body.decode('utf-8'))
+		print("Json data:", json_data)
 		field_dict = retrieve_all_fields(
 						json_data,
 						self.required_fields
