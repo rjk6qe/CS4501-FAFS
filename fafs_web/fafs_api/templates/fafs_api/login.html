@@ -1,0 +1,21 @@
+{% extends 'fafs_api/base.html' %}
+
+{% block body_block %}
+
+        <h1>Login on Free and For Sale</h1>
+        <form id="login_form" method="post" action="{% url 'login' %}">
+            {% csrf_token %}
+            {{ login_form.non_field_errors }}
+            {% for hidden in login_form.hidden_fields %}
+                {{ hidden }}
+            {% endfor %}
+            {% for field in login_form.visible_fields %}
+                {{ field.errors }}
+                {{ field.help_text }}
+		            {{ field.label_tag }}
+                <p> {{ field }} </p>
+            {% endfor %}
+            <input type="submit" name="submit" class="btn btn-default" value="Login" />
+        </form>
+
+{% endblock %}

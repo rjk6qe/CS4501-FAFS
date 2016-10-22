@@ -34,7 +34,6 @@ def get_request(path_list=None):
 
 def post_request(path_list, data):
     url = append_to_url(path_list)
-    post_encoded = urllib.parse.urlencode(data).encode('utf-8')
     req = requests.post(url, json=data)
     json_response = req.json()
     return json_response

@@ -1,9 +1,11 @@
 from django.shortcuts import render
-from django.http import HttpResponse
+from django.core.urlresolvers import reverse
+from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 import urllib.request
 import urllib.parse
+import requests
 import json
-from fafs_api.forms import UserRegister
+from fafs_api.forms import UserRegister, UserLoginForm
 
 API_URL = 'http://exp-api:8000/fafs/'
 
@@ -29,11 +31,8 @@ def get_request(path_list=None):
 
 def post_request(path_list, data):
     url = append_to_url(path_list)
-    post_encoded = urllib.parse.urlencode(data).encode('utf-8')
-    #req = requests.post(url, json=data)
-    req = urllib.request.Request(url, data=post_encoded, method='POST')
-    #json_response = req.json()
-    json_response = urllib.request.urlopen(req).read().decode('utf-8')
+    req = requests.post(url, json=data)
+    json_response = req.json()
     return json_response
 
 def index(request):
@@ -76,3 +75,31 @@ def register(request):
         user_form = UserRegister()
 
     return render(request, 'fafs_api/register.html', {'user_form': user_form, 'registered': registered})
+
+def login(request):
+    if request.method == 'POST':
+        login_form = UserLoginForm(data=request.POST)
+        if login_form.is_valid():
+            email = login_form.cleaned_data['email']
+            password = login_form.cleaned_data['password']
+            next = login_form.cleaned_data.get('next') or reverse('index')
+            post_data = {
+                "email": email,
+                "password": password
+            }
+            response = post_request(['login'], post_data)
+            if not response['status']:
+                # Add message to non_field error
+                login_form.add_error(None, response['response']['message'])
+            else:
+                authenticator = response['response']['authenticator']
+                request_response = HttpResponseRedirect(next)
+                request_response.set_cookie("authenticator", authenticator)
+                return request_response
+    else:
+        login_form = UserLoginForm()
+
+    next = request.GET.get('next') or reverse('index')
+    context_dict = {}
+    context_dict['login_form'] = login_form
+    return render(request, 'fafs_api/login.html', context_dict)
