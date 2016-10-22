@@ -113,14 +113,12 @@ def validate_auth(request):
         if authenticator:
             response = post_request(['auth'], post_data)
             return JsonResponse(response)
-            
+
         else:
             json_data = {"message": "Missing authenticator"}
             return JsonResponse(json_encode_dict_and_status(json_data, False))
     json_data = {"message": "Must be a POST request"}
     return JsonResponse(json_encode_dict_and_status(json_data, False))
-
-
 
 def get_categories(request, pk=None):
     path_list = ['categories',pk]

@@ -9,18 +9,6 @@ from fafs_api.forms import UserRegister, UserLoginForm
 
 API_URL = 'http://exp-api:8000/fafs/'
 
-def login_required(f):
-    def wrap(request, *args, **kwargs):
-        # try authenticating the user
-        user = _validate(request)
-        # failed
-        if not user:
-            # redirect the user to the login page
-            return HttpResponseRedirect(reverse('login')+'?next='+current_url)
-        else:
-            return f(request, *args, **kwargs)
-    return wrap
-
 def make_request(path):
     req = urllib.request.Request(API_URL + path)
     resp_json = urllib.request.urlopen(req).read().decode('utf-8')
@@ -47,9 +35,35 @@ def post_request(path_list, data):
     json_response = req.json()
     return json_response
 
+def get_authenticator(request):
+    authenticator = request.COOKIES.get('authenticator', None)
+    return authenticator
+
+def get_user_if_logged_in(request):
+    authenticator = get_authenticator(request)
+    post_data = {"authenticator": authenticator}
+    user = post_request(['validate_auth'], post_data)
+    if user['status']:
+        user = user["response"]
+    else:
+        user = None
+    return user
+
+def login_required(f):
+    def wrap(request, *args, **kwargs):
+        # try authenticating the user
+        user = get_user_if_logged_in(request)
+        if user:
+            request.user = user
+            return f(request, *args, **kwargs)
+        else:
+            current_url = request.path
+            return HttpResponseRedirect(reverse('login')+'?next='+current_url)
+    return wrap
 
 def index(request):
-
+    user = get_user_if_logged_in(request)
+    
     cat_req = urllib.request.Request(API_URL + 'categories/')
     cat_resp_json = urllib.request.urlopen(cat_req).read().decode('utf-8')
     cat_resp = json.loads(cat_resp_json)
@@ -58,6 +72,7 @@ def index(request):
 
     latest_product_resp = json.loads(latest_product_resp_json)
     context_dict = {'categories': cat_resp, 'products' : latest_product_resp }
+    context_dict['user'] = user
     return render(request, 'fafs_api/index.html', context_dict)
 
 def product_detail(request, pk):
@@ -117,5 +132,9 @@ def login(request):
     context_dict['login_form'] = login_form
     return render(request, 'fafs_api/login.html', context_dict)
 
+@login_required
 def logout(request):
-    pass
+    authenticator = get_authenticator(request)
+    post_data = {"authenticator": authenticator}
+    response = post_request(['logout'], post_data)
+    return HttpResponseRedirect(reverse('index'))
