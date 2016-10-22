@@ -5,7 +5,7 @@ import urllib.request
 import urllib.parse
 import requests
 import json
-from fafs_api.forms import UserRegister, UserLoginForm
+from fafs_api.forms import UserRegister, UserLoginForm, ProductForm
 
 API_URL = 'http://exp-api:8000/fafs/'
 
@@ -89,7 +89,14 @@ def category_detail(request, pk):
 
 @login_required
 def product_create(request):
-    return render(request, 'fafs_api/product_create.html')
+    if request.method == 'POST':
+        product_form = ProductForm(data=request.POST)
+    else:
+        product_form = ProductForm()
+
+    context_dict = {}
+    context_dict['product_form'] = product_form
+    return render(request, 'fafs_api/product_create.html', context_dict)
 
 def register(request):
     registered = False
