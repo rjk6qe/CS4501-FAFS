@@ -137,9 +137,26 @@ def get_latest_products(request, num=None):
 
 def register_user(request):
     #response = post_request(['users',])
-    post_data = {"email": "tanul@email.com", "password": "password555", "school_id": "1", "phone_number": "555-555-5555", "pk" : "9"}
-    post_encoded = urllib.parse.urlencode(post_data).encode('utf-8')
-    req = urllib.request.Request('http://models-api:8000/api/v1/users/', data=post_encoded, method='POST')
-    resp_json = urllib.request.urlopen(req).read()
-    #resp = json.loads(resp_json)
-    return JsonResponse(json_encode_dict_and_status(post_data, True))
+    #post_data = {"email": "tanul@email.com", "password": "password555", "school_id": "1", "phone_number": "555-555-5555", "pk" : "9"}
+    if request.method == 'POST':
+        json_data = json.loads(request.body.decode('utf-8'))
+
+        email = json_data.get('email', None)
+        school = json_data.get('school', None)
+        password = json_data.get('password', None)
+        phone_number = json_data.get('phone_number', None)
+        post_data = {
+            'email': email,
+            'school' : school, 
+            'password': password,
+            'phone_number' : phone_number
+        }
+        if email and password:
+            response = post_request(['register'], post_data)
+            if response['status']:
+                return JsonResponse(json_encode_dict_and_status(response, True))
+            else:
+                return JsonResponse(response)
+        else:
+            data = {"message": "Missing email/password"}
+            return JsonResponse(data, False)
