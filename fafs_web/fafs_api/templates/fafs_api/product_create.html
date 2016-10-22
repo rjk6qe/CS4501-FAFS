@@ -1,0 +1,19 @@
+{% extends 'fafs_api/base.html' %}
+
+{% block side_block %}
+    <ul class="nav nav-pills nav-stacked">
+	{% for category in categories.response %}
+	    <li role="presentation"> <a href="{% url 'category_detail' category.pk %}">{{ category.name }} </a></li>
+	{% endfor %}
+    <ul>
+{% endblock %}
+
+{% block body_block %}
+
+    <h1> Welcome to the University of Virginia Free and For Sale <h1>
+      {% if request.user %}
+      {{ request.user.email }}
+      {% endif %}
+
+
+{% endblock %}

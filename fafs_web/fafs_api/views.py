@@ -63,7 +63,7 @@ def login_required(f):
 
 def index(request):
     user = get_user_if_logged_in(request)
-    
+
     cat_req = urllib.request.Request(API_URL + 'categories/')
     cat_resp_json = urllib.request.urlopen(cat_req).read().decode('utf-8')
     cat_resp = json.loads(cat_resp_json)
@@ -87,6 +87,9 @@ def category_detail(request, pk):
     context_dict = {'categories': cat_resp, 'category': this_category['response']}
     return render(request, 'fafs_api/category_detail.html', context_dict)
 
+@login_required
+def product_create(request):
+    return render(request, 'fafs_api/product_create.html')
 
 def register(request):
     registered = False
@@ -105,11 +108,14 @@ def register(request):
     return render(request, 'fafs_api/register.html', {'user_form': user_form, 'registered': registered})
 
 def login(request):
+    if request.user:
+        return HttpResponseRedirect(reverse('index'))
     if request.method == 'POST':
         login_form = UserLoginForm(data=request.POST)
         if login_form.is_valid():
             email = login_form.cleaned_data['email']
             password = login_form.cleaned_data['password']
+            #next = request.GET.get('next') or reverse('index')
             next = login_form.cleaned_data.get('next') or reverse('index')
             post_data = {
                 "email": email,
@@ -125,9 +131,9 @@ def login(request):
                 request_response.set_cookie("authenticator", authenticator)
                 return request_response
     else:
-        login_form = UserLoginForm()
+        next = request.GET.get('next') or reverse('index')
+        login_form = UserLoginForm(initial={'next': next})
 
-    next = request.GET.get('next') or reverse('index')
     context_dict = {}
     context_dict['login_form'] = login_form
     return render(request, 'fafs_api/login.html', context_dict)

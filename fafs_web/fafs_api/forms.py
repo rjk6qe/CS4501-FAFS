@@ -12,3 +12,6 @@ class UserLoginForm(forms.Form):
                                 required=True,
                                 max_length=100,
                                 widget=forms.PasswordInput)
+    next = forms.CharField(required=False,
+                            max_length=100,
+                            widget=forms.HiddenInput)
