@@ -52,6 +52,35 @@ def get_valid_authenticator(token):
 	except Authenticator.DoesNotExist:
 		return None
 
+class AuthView(View):
+	model = Authenticator
+	required_fields = ['authenticator']
+
+	@method_decorator(csrf_exempt)
+	def dispatch(self, request, *args, **kwargs):
+		return super(AuthView, self).dispatch(request, *args, **kwargs)
+
+	def post(self, request):
+		json_data = json.loads(request.body.decode('utf-8'))
+		field_dict = retrieve_all_fields(
+						json_data,
+						self.required_fields
+		)
+		auth = get_valid_authenticator(token=field_dict['authenticator'])
+		status = False
+		if auth:
+			user = auth.user
+			json_data = {
+				"pk":user.pk,
+				"email":user.email,
+				"rating":user.rating,
+				"school_id":user.school_id.pk
+				}
+			status = True
+		else:
+			json_data = {"message": "Invalid authenticator"}
+		return JsonResponse(json_encode_dict_and_status(json_data, status))
+
 class LoginView(View):
 	model = User
 	required_fields = ['email', 'password']
@@ -106,18 +135,16 @@ class LogoutView(View):
 						json_data,
 						self.required_fields
 					)
-		try:
-			auth = get_valid_authenticator(token=field_dict['authenticator'])
-			if auth:
-				auth.delete()
-				status = True
-				json_data = {"message": "success"}
-			else:
-				status = False
-				json_data = {'message': 'Invalid authenticator'}
-		except Authenticator.DoesNotExist:
+
+		auth = get_valid_authenticator(token=field_dict['authenticator'])
+		if auth:
+			auth.delete()
+			status = True
+			json_data = {"message": "success"}
+		else:
 			status = False
 			json_data = {'message': 'Invalid authenticator'}
+
 		return JsonResponse(json_encode_dict_and_status(json_data, status))
 
 class UserView(View):
@@ -502,8 +529,6 @@ class ProductView(View):
 			obj.delete()
 			status = True
 		return JsonResponse(json_encode_dict_and_status({},status))
-
-
 
 class TransactionView(View):
 	required_fields = ['seller', 'buyer', 'product_id']

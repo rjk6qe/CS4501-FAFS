@@ -9,6 +9,18 @@ from fafs_api.forms import UserRegister, UserLoginForm
 
 API_URL = 'http://exp-api:8000/fafs/'
 
+def login_required(f):
+    def wrap(request, *args, **kwargs):
+        # try authenticating the user
+        user = _validate(request)
+        # failed
+        if not user:
+            # redirect the user to the login page
+            return HttpResponseRedirect(reverse('login')+'?next='+current_url)
+        else:
+            return f(request, *args, **kwargs)
+    return wrap
+
 def make_request(path):
     req = urllib.request.Request(API_URL + path)
     resp_json = urllib.request.urlopen(req).read().decode('utf-8')
@@ -103,3 +115,6 @@ def login(request):
     context_dict = {}
     context_dict['login_form'] = login_form
     return render(request, 'fafs_api/login.html', context_dict)
+
+def logout(request):
+    pass
