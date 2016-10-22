@@ -30,8 +30,10 @@ def get_request(path_list=None):
 def post_request(path_list, data):
     url = append_to_url(path_list)
     post_encoded = urllib.parse.urlencode(data).encode('utf-8')
-    req = requests.post(url, json=data)
-    json_response = req.json()
+    #req = requests.post(url, json=data)
+    req = urllib.request.Request(url, data=post_encoded, method='POST')
+    #json_response = req.json()
+    json_response = urllib.request.urlopen(req).read().decode('utf-8')
     return json_response
 
 def index(request):
@@ -64,7 +66,9 @@ def register(request):
     if request.method == 'POST':
         user_form = UserRegister(data=request.POST)
         if user_form.is_valid():
-            user = post_request(['register'], user_form)
+            result = {}
+            result= user_form.cleaned_data
+            user = post_request(['register'], result)
             registered = True
         else:
             print(user_form.errors)
