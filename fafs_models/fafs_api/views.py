@@ -71,7 +71,7 @@ class AuthView(View):
 				status = True
 				json_data = {
 					"token": queryset.token,
-					"email":queryset.user.email,
+					"user_id":queryset.user.pk,
 					"date_created":queryset.date_created
 				}
 			else:
@@ -108,9 +108,17 @@ class AuthView(View):
 
 		return JsonResponse(json_encode_dict_and_status(response_data, status))
 
+	def delete(self, request, token=None):
+		status = False
+		obj = get_object_or_none(self.model, token=token)
+		if obj is not None:
+			obj.delete()
+			status = True
+		return JsonResponse(json_encode_dict_and_status({},status))
+
 @method_decorator(csrf_exempt)
 def auth_check(request):
-	required_fields = ['token']
+	required_fields = ['authenticator']
 	if request.method == "POST":
 		json_data = json.loads(request.body.decode('utf-8'))
 		field_dict = retrieve_all_fields(
