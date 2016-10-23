@@ -61,6 +61,7 @@ def obj_date_to_string(obj, field_list):
 
 @csrf_exempt
 def login(request):
+    status = False
     if request.method == 'POST':
         json_data = json.loads(request.body.decode('utf-8'))
         email = json_data.get('email', None)
@@ -69,20 +70,27 @@ def login(request):
             'email': email,
             'password': password
         }
-        
 
         if email and password:
-            response = post_request(['login'], post_data)
-            if response['status']:
-                authenticator = {"authenticator": response['response']['token']}
-                return JsonResponse(json_encode_dict_and_status(authenticator, True))
+            # Call model layer to verify password
+            post_response = post_request(['users', 'check_pass'], post_data)
+            if post_response['status']:
+                user_id = post_response['response']['user_id']
+
+                # Create authenticator based on user id
+                post_data = {"user_id": user_id}
+                post_response = post_request(['auth'], post_data)
+                # Get token back
+                token = post_response['response']['token']
+                status = True
+                response_data = {"authenticator": token}
             else:
                 return JsonResponse(response)
         else:
-            data = {"message": "Missing email/password"}
-            return JsonResponse(json_encode_dict_and_status(data, False))
-    json_data = {"message": "Must be a POST request"}
-    return JsonResponse(json_encode_dict_and_status(json_data, False))
+            response_data = {"message": "Missing email/password"}
+    else:
+        response_data = {"message": "Must be a POST request"}
+    return JsonResponse(json_encode_dict_and_status(response_data, status))
 
 @csrf_exempt
 def logout(request):
