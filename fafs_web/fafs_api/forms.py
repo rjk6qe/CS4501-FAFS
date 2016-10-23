@@ -1,4 +1,5 @@
 from django import forms
+from . import views
 
 class UserRegister(forms.Form):
     email = forms.CharField(label='Enter email:', required=False, max_length=100)
@@ -20,7 +21,6 @@ class ProductForm(forms.Form):
     name = forms.CharField(max_length=50)
     description = forms.CharField(max_length=500,
                                     widget=forms.Textarea)
-    #category_id = forms.ChoiceField(Category)
     price = forms.DecimalField(max_digits=10, decimal_places=2)
     pick_up = forms.CharField(max_length=50)
 
@@ -54,3 +54,13 @@ class ProductForm(forms.Form):
     )
     condition = forms.ChoiceField(choices=CONDITION_CHOICES,
                                     initial=NEW)
+
+    def __init__(self, *args, **kwargs):
+        category_choices = kwargs.pop('category_choices', None)
+
+        super(ProductForm, self).__init__(*args, **kwargs)
+        if category_choices:
+            self.fields['category_id'] = forms.ChoiceField(
+                                choices=category_choices,
+                                label='Category')
+        self.field_order = ['name', 'description', 'category_id']

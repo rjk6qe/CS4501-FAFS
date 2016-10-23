@@ -89,10 +89,16 @@ def category_detail(request, pk):
 
 @login_required
 def product_create(request):
+    categories = get_request(['categories'])
+    category_choices = []
+    for category in categories['response']:
+        category_choices.append((category['pk'], category['name']))
+    category_choices = tuple(category_choices)
+
     if request.method == 'POST':
-        product_form = ProductForm(data=request.POST)
+        product_form = ProductForm(data=request.POST, category_choices = category_choices)
     else:
-        product_form = ProductForm()
+        product_form = ProductForm(category_choices = category_choices)
 
     context_dict = {}
     context_dict['product_form'] = product_form
