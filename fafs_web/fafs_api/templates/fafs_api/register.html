@@ -13,12 +13,15 @@
 
         {% if registered %}
             <h1> Your account has been created!</h1>
-            <h3> Start buying and selling today :) </h1>
+            <h3> <a href= "{% url 'login' %}" class="button">Try logging in :) </a> </h1>
+            <br>
         {% else %}
 
         <h1>Register on Free and For Sale</h1>
 
         <form id="user_form" method="post" action="/fafs/register/">
+
+            {{ login_form.non_field_errors }}
 
             {% csrf_token %}
             {% for hidden in user_form.hidden_fields %}
@@ -26,6 +29,8 @@
             {% endfor %}
 
             {% for field in user_form.visible_fields %}
+                {{ field.help_text }}
+		{{ field.label_tag }}
                 {% if field.id_for_label = "id_school" %}
                     <p>
                     <select id={{ field.id_for_label }} name = "school" >
@@ -38,8 +43,7 @@
                 {% endif %}
 
                 {{ field.errors }}
-                {{ field.help_text }}
-		{{ field.label_tag }}
+                
             {% endfor %}
 
             <input type="submit" name="submit" class="btn btn-default" value="Register" />
