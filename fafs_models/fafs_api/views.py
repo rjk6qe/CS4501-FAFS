@@ -135,6 +135,29 @@ def auth_check(request):
 			response_data = {"message": "Invalid authenticator"}
 		return JsonResponse(json_encode_dict_and_status(response_data, status))
 
+@method_decorator(csrf_exempt)
+def users_check_pass(request):
+	required_fields = ['email', 'password']
+	if request.method == "POST":
+		json_data = json.loads(request.body.decode('utf-8'))
+		field_dict = retrieve_all_fields(
+			json_data,
+			required_fields
+		)
+		status = False
+		response_data = {"message": "Incorrect email/password"}
+		try:
+			login_user = User.objects.get(email=field_dict['email'])
+			# Check password
+			hashed_password = login_user.password
+			if hashers.check_password(field_dict['password'], hashed_password):
+				status = True
+				response_data = {"user_id": login_user.pk}
+		except User.DoesNotExist:
+			pass
+
+		return JsonResponse(json_encode_dict_and_status(response_data, status))
+
 class LoginView(View):
 	model = User
 	required_fields = ['email', 'password']

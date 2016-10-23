@@ -69,6 +69,7 @@ def login(request):
             'email': email,
             'password': password
         }
+        
 
         if email and password:
             response = post_request(['login'], post_data)
