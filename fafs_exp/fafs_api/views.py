@@ -170,8 +170,6 @@ def get_latest_products(request, num=None):
 
 
 def register_user(request):
-    #response = post_request(['users',])
-    #post_data = {"email": "tanul@email.com", "password": "password555", "school_id": "1", "phone_number": "555-555-5555", "pk" : "9"}
     if request.method == 'POST':
         json_data = json.loads(request.body.decode('utf-8'))
 

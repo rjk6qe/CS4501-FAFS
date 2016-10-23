@@ -120,12 +120,21 @@ def register(request):
                 "phone_number" : phone_number
             }
             response = post_request(['register'], post_data)
-            registered = True
+            if not response['status']:
+                # Add message to non_field error
+                error_list = response['response']['Error']
+                for error in error_list: 
+                    user_form.add_error(None, error)
+                #etwg = response['hi']
+                registered = False
+            else: 
+                registered = True
         else:
             print(user_form.errors)
     else:
         user_form = UserRegister()
 
+    
     return render(request, 'fafs_api/register.html', {'user_form': user_form, 'registered': registered})
 
 def login(request):
