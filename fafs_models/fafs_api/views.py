@@ -169,7 +169,8 @@ class UserView(View):
 					"pk":queryset.pk,
 					"email":queryset.email,
 					"school_id":queryset.school_id.pk,
-					"rating":queryset.rating
+					"rating":queryset.rating,
+					"password":queryset.password
 					}
 			else:
 				status = False
@@ -177,7 +178,7 @@ class UserView(View):
 		else:
 			status = True
 			queryset = self.model.objects.all()
-			json_data = list(queryset.values('pk','email','school_id','rating'))
+			json_data = list(queryset.values('pk','email','school_id','rating', 'password'))
 
 		return JsonResponse(json_encode_dict_and_status(json_data, status))
 
