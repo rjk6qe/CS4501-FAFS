@@ -112,10 +112,12 @@ def register(request):
             email = user_form.cleaned_data['email']
             password = user_form.cleaned_data['password']
             school = user_form.cleaned_data['school']
+            phone_number = user_form.cleaned_data['phone_number']
             post_data = {
                 "email": email,
                 "password": password, 
-                "school": school
+                "school_id": school, 
+                "phone_number" : phone_number
             }
             response = post_request(['register'], post_data)
             registered = True

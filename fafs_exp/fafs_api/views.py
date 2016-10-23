@@ -176,17 +176,17 @@ def register_user(request):
         json_data = json.loads(request.body.decode('utf-8'))
 
         email = json_data.get('email', None)
-        school = json_data.get('school', None)
+        school = json_data.get('school_id', None)
         password = json_data.get('password', None)
         phone_number = json_data.get('phone_number', None)
         post_data = {
             'email': email,
-            'school' : school,
+            'school_id' : school,
             'password': password,
             'phone_number' : phone_number
         }
         if email and password:
-            response = post_request(['register'], post_data)
+            response = post_request(['users'], post_data)
             if response['status']:
                 return JsonResponse(json_encode_dict_and_status(response, True))
             else:
