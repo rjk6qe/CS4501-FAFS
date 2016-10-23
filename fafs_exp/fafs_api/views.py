@@ -130,7 +130,7 @@ def get_categories(request, pk=None):
         product_data = response['response']
         product_list = []
         for product in product_data:
-            if product['category_id'] == int(pk):
+            if product['category_id'] == 				``	int(pk):
                 product_list.append(product)
         obj_date_to_string(product_list, ['time_posted', 'time_updated'])
         category_data['product_list'] = product_list
@@ -191,6 +191,7 @@ def register_user(request):
                 return JsonResponse(json_encode_dict_and_status(response, True))
             else:
                 return JsonResponse(response)
+            #return JsonResponse(response)
         else:
             data = {"message": "Missing email/password"}
             return JsonResponse(data, False)

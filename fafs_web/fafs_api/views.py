@@ -93,15 +93,23 @@ def register(request):
     if request.method == 'POST':
         user_form = UserRegister(data=request.POST)
         if user_form.is_valid():
-            result = {}
-            result= user_form.cleaned_data
-            user = post_request(['register'], result)
+            #result = {}
+            #result= user_form.cleaned_data
+            #user = post_request(['register'], result)
+            email = user_form.cleaned_data['email']
+            password = user_form.cleaned_data['password']
+            school = user_form.cleaned_data['school']
+            post_data = {
+                'email': email,
+                'password': password, 
+                'school': school
+            }
+            response = post_request(['register'], post_data)
             registered = True
         else:
             print(user_form.errors)
     else:
         user_form = UserRegister()
-
     return render(request, 'fafs_api/register.html', {'user_form': user_form, 'registered': registered})
 
 def login(request):
