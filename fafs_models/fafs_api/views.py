@@ -23,9 +23,9 @@ def retrieve_all_fields(dictionary, field_list):
 		return_dict[field] = value
 	return return_dict
 
-def get_object_or_none(model, pk):
+def get_object_or_none(model, **kwargs):
 	try:
-		return model.objects.get(pk=pk)
+		return model.objects.get(**kwargs)
 	except model.DoesNotExist:
 		return None
 
@@ -54,11 +54,35 @@ def get_valid_authenticator(token):
 
 class AuthView(View):
 	model = Authenticator
-	required_fields = ['authenticator']
+	required_fields = ['user_id']
 
 	@method_decorator(csrf_exempt)
 	def dispatch(self, request, *args, **kwargs):
 		return super(AuthView, self).dispatch(request, *args, **kwargs)
+
+	def get(self, request, token=None):
+		status = False
+		if token is not None:
+			queryset = get_object_or_none(
+				self.model,
+				token=token
+			)
+			if queryset is not None:
+				status = True
+				json_data = {
+					"token": queryset.token,
+					"email":queryset.user.email,
+					"date_created":queryset.date_created
+				}
+			else:
+				status = False
+				json_data = {"message": "No authenticator with token found"}
+		else:
+			status = True
+			queryset = self.model.objects.all()
+			json_data = list(queryset.values('token', 'user_id', 'date_created'))
+
+		return JsonResponse(json_encode_dict_and_status(json_data, status))
 
 	def post(self, request):
 		json_data = json.loads(request.body.decode('utf-8'))
@@ -66,20 +90,42 @@ class AuthView(View):
 						json_data,
 						self.required_fields
 		)
-		auth = get_valid_authenticator(token=field_dict['authenticator'])
-		status = False
-		if auth:
-			user = auth.user
-			json_data = {
-				"pk":user.pk,
-				"email":user.email,
-				"rating":user.rating,
-				"school_id":user.school_id.pk
-				}
+		try:
+			user = User.objects.get(pk=field_dict['user_id'])
+			auth = Authenticator()
+			auth.user = user
+			auth.save()
+
+			response_data = {
+				"token": auth.token,
+				"user_id": auth.user.pk,
+				"date_created": auth.date_created
+			}
 			status = True
-		else:
-			json_data = {"message": "Invalid authenticator"}
-		return JsonResponse(json_encode_dict_and_status(json_data, status))
+		except User.DoesNotExist:
+			status = False
+			response_data = {"message": "Invalid user id"}
+
+		return JsonResponse(json_encode_dict_and_status(response_data, status))
+
+@method_decorator(csrf_exempt)
+def auth_check(request):
+	required_fields = ['token']
+	if request.method == "POST":
+		json_data = json.loads(request.body.decode('utf-8'))
+		field_dict = retrieve_all_fields(
+			json_data,
+			required_fields
+		)
+		status = False
+		try:
+			auth = Authenticator.objects.get(token=field_dict['authenticator'])
+			user_id = auth.user.pk
+			status = True
+			response_data = {"user_id": user_id}
+		except Authenticator.DoesNotExist:
+			response_data = {"message": "Invalid authenticator"}
+		return JsonResponse(json_encode_dict_and_status(response_data, status))
 
 class LoginView(View):
 	model = User
