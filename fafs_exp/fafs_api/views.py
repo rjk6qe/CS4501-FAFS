@@ -8,6 +8,8 @@ from django.utils import dateparse
 from django.contrib.humanize.templatetags.humanize import naturalday
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
+from django.core.serializers.json import DjangoJSONEncoder
+
 
 # Create your views here.
 API_URL = 'http://models-api:8000/api/v1/'
@@ -34,7 +36,7 @@ def get_request(path_list=None):
 
 def post_request(path_list, data):
     url = append_to_url(path_list)
-    req = requests.post(url, json=data)
+    req = requests.post(url, data=json.dumps(data, cls=DjangoJSONEncoder))
     json_response = req.json()
     return json_response
 
@@ -158,6 +160,20 @@ def get_products(request, pk=None):
     product_data['owner'] = owner_data
 
     return JsonResponse(json_encode_dict_and_status(product_data, True))
+
+def create_product(request):
+    if request.method == "POST":
+        json_data = json.loads(request.body.decode('utf-8'))
+        post_data = {
+            'name': json_data['name'],
+            'description': json_data['description'],
+            'category_id': json_data['category_id'],
+            'pick_up': json_data['pick_up'],
+            'price': json_data['price'],
+            'owner_id': json_data['owner_id']
+        }
+        response = post_request(['products'], post_data)
+        return JsonResponse(response)
 
 def get_latest_products(request, num=None):
     if num is None:

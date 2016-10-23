@@ -6,6 +6,7 @@ import urllib.parse
 import requests
 import json
 from fafs_api.forms import UserRegister, UserLoginForm, ProductForm
+from django.core.serializers.json import DjangoJSONEncoder
 
 API_URL = 'http://exp-api:8000/fafs/'
 
@@ -31,7 +32,7 @@ def get_request(path_list=None):
 
 def post_request(path_list, data):
     url = append_to_url(path_list)
-    req = requests.post(url, json=data)
+    req = requests.post(url, data=json.dumps(data, cls=DjangoJSONEncoder))
     json_response = req.json()
     return json_response
 
@@ -97,6 +98,21 @@ def product_create(request):
 
     if request.method == 'POST':
         product_form = ProductForm(data=request.POST, category_choices = category_choices)
+        if product_form.is_valid():
+            post_data = {
+                "name": product_form.cleaned_data['name'],
+                "description": product_form.cleaned_data['description'],
+                "owner_id": request.user['pk'],
+                "category_id": product_form.cleaned_data['category_id'],
+                "price": product_form.cleaned_data['price'],
+                "pick_up": product_form.cleaned_data['pick_up']
+            }
+            response = post_request(['products', 'create'], post_data)
+            if not response['status']:
+                product_form.add_error(None, response['response']['message'])
+            else:
+                print(response)
+                return HttpResponseRedirect(reverse('index'))
     else:
         product_form = ProductForm(category_choices = category_choices)
 
@@ -115,8 +131,8 @@ def register(request):
             phone_number = user_form.cleaned_data['phone_number']
             post_data = {
                 "email": email,
-                "password": password, 
-                "school_id": school, 
+                "password": password,
+                "school_id": school,
                 "phone_number" : phone_number
             }
             response = post_request(['register'], post_data)
