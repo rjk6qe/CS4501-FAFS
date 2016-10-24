@@ -10,11 +10,6 @@ from django.core.serializers.json import DjangoJSONEncoder
 
 API_URL = 'http://exp-api:8000/fafs/'
 
-def make_request(path):
-    req = urllib.request.Request(API_URL + path)
-    resp_json = urllib.request.urlopen(req).read().decode('utf-8')
-    return json.loads(resp_json)
-
 def append_to_url(path_list):
     url = API_URL
     if path_list is not None:
@@ -43,7 +38,7 @@ def get_authenticator(request):
 def get_user_if_logged_in(request):
     authenticator = get_authenticator(request)
     post_data = {"authenticator": authenticator}
-    user = post_request(['validate_auth'], post_data)
+    user = post_request(['auth_check'], post_data)
     if user['status']:
         user = user["response"]
     else:
@@ -52,10 +47,7 @@ def get_user_if_logged_in(request):
 
 def login_required(f):
     def wrap(request, *args, **kwargs):
-        # try authenticating the user
-        user = get_user_if_logged_in(request)
-        if user:
-            request.user = user
+        if request.user:
             return f(request, *args, **kwargs)
         else:
             current_url = request.path
@@ -77,8 +69,8 @@ def index(request):
     return render(request, 'fafs_api/index.html', context_dict)
 
 def product_detail(request, pk):
-    cat_resp = make_request('categories/')
-    product_resp = make_request('products/' + pk)
+    cat_resp = get_request(['categories'])
+    product_resp = get_request(['products', pk])
     context_dict = {'categories': cat_resp, 'product': product_resp['response']}
     return render(request, 'fafs_api/product_detail.html', context_dict)
 
@@ -138,18 +130,18 @@ def register(request):
             if not response['status']:
                 # Add message to non_field error
                 error_list = response['response']['Error']
-                for error in error_list: 
+                for error in error_list:
                     user_form.add_error(None, error)
                 #etwg = response['hi']
                 registered = False
-            else: 
+            else:
                 registered = True
         else:
             print(user_form.errors)
     else:
         user_form = UserRegister()
 
-    
+
     return render(request, 'fafs_api/register.html', {'user_form': user_form, 'registered': registered})
 
 def login(request):

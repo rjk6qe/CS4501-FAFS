@@ -23,7 +23,7 @@ def get_authenticator(request):
 def get_user_if_logged_in(request):
     authenticator = get_authenticator(request)
     post_data = {"authenticator": authenticator}
-    user = post_request(['validate_auth'], post_data)
+    user = post_request(['auth_check'], post_data)
     if user['status']:
         user = user["response"]
     else:
