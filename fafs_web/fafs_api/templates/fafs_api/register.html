@@ -21,7 +21,7 @@
 
         <form id="user_form" method="post" action="/fafs/register/">
 
-            {{ login_form.non_field_errors }}
+            {{ user_form.non_field_errors }}
 
             {% csrf_token %}
             {% for hidden in user_form.hidden_fields %}
