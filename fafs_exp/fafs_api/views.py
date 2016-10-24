@@ -22,10 +22,6 @@ def append_to_url(path_list):
                 url = url + str(path) + '/'
     return url
 
-def make_request(path):
-    req = urllib.request.Request(API_URL + path)
-    resp_json = urllib.request.urlopen(req).read().decode('utf-8')
-    return json.loads(resp_json)
 
 def get_request(path_list=None):
     url = append_to_url(path_list)
@@ -105,6 +101,7 @@ def logout(request):
         json_data = json.loads(request.body.decode('utf-8'))
         authenticator = json_data.get('authenticator', None)
         if authenticator:
+            # Delete authenticator
             response = delete_request(['auth', authenticator])
             if response['status']:
                 response_data = {"message": "logout success"}
@@ -127,12 +124,17 @@ def auth_check(request):
             'authenticator': authenticator
         }
         if authenticator:
+            # Check authenticator
             post_response = post_request(['auth_check'], post_data)
             if post_response['status']:
+                # Get user based on returned user id
                 user_id = post_response['response']['user_id']
                 get_response = get_request(['users', user_id])
                 if get_response['status']:
                     status = True
+                    # Take out password data
+                    get_response['response'].pop('password', None)
+
                 response_data = get_response['response']
             else:
                 response_data = post_response['response']
@@ -208,11 +210,9 @@ def get_latest_products(request, num=None):
 def register_user(request):
     if request.method == 'POST':
         json_data = json.loads(request.body.decode('utf-8'))
-
         email = json_data.get('email', None)
         school = json_data.get('school_id', None)
         password = json_data.get('password', None)
-
         post_data = {
             'email': email,
             'school_id' : school,
