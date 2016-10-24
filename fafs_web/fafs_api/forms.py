@@ -2,7 +2,7 @@ from django import forms
 from . import views
 
 class UserRegister(forms.Form):
-    email = forms.CharField(label='Enter email:', required=True, max_length=100)
+    email = forms.EmailField(label='Enter email:', required=True, max_length=100)
     school = forms.CharField(label='Enter school:', required=True, max_length=100)
     password = forms.CharField(label="Enter password:",
                                 required=True,
