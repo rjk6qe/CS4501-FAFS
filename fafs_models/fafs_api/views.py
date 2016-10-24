@@ -274,7 +274,6 @@ class UserView(View):
 			json_data = {
 				"pk":user.pk,
 				"email":user.email,
-				"rating":user.rating,
 				"school_id":user.school_id.pk
 				}
 		except ValidationError as e:
