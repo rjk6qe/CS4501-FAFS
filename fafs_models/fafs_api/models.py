@@ -95,8 +95,6 @@ class User(models.Model):
 	school_id = models.ForeignKey(School)
 	email = models.EmailField(unique=True, blank=False)
 	password = models.CharField(max_length=255, blank=False)
-	rating = models.IntegerField(blank=True, null=True)
-	phone_number = models.CharField(max_length=20, blank=True)
 
 	objects = UserManager()
 
