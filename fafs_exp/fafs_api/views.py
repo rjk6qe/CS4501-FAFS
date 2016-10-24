@@ -40,6 +40,12 @@ def post_request(path_list, data):
     json_response = req.json()
     return json_response
 
+def delete_request(path_list):
+    url = append_to_url(path_list)
+    req = requests.delete(url)
+    json_response = req.json()
+    return json_response
+
 def json_encode_dict_and_status(dictionary, status):
     response_dict = {}
     response_dict["status"] = status
@@ -85,7 +91,7 @@ def login(request):
                 status = True
                 response_data = {"authenticator": token}
             else:
-                return JsonResponse(response)
+                response_data = post_response['response']
         else:
             response_data = {"message": "Missing email/password"}
     else:
@@ -94,27 +100,26 @@ def login(request):
 
 @csrf_exempt
 def logout(request):
+    status = False
     if request.method == 'POST':
         json_data = json.loads(request.body.decode('utf-8'))
         authenticator = json_data.get('authenticator', None)
-        post_data = {
-            'authenticator': authenticator
-        }
         if authenticator:
-            response = post_request(['logout'], post_data)
+            response = delete_request(['auth', authenticator])
             if response['status']:
-                json_data = {"message": "logout success"}
-                return JsonResponse(json_encode_dict_and_status(json_data, True))
+                response_data = {"message": "logout success"}
+                status = True
             else:
-                return JsonResponse(response)
+                response_data = response['response']
         else:
-            json_data = {"message": "Missing authenticator"}
-            return JsonResponse(json_encode_dict_and_status(json_data, False))
-    json_data = {"message": "Must be a POST request"}
-    return JsonResponse(json_encode_dict_and_status(json_data, False))
+            response_data = {"message": "Missing authenticator"}
+    else:
+        response_data = {"message": "Must be a POST request"}
+    return JsonResponse(json_encode_dict_and_status(response_data, status))
 
 @csrf_exempt
-def validate_auth(request):
+def auth_check(request):
+    status = False
     if request.method == 'POST':
         json_data = json.loads(request.body.decode('utf-8'))
         authenticator = json_data.get('authenticator', None)
@@ -122,14 +127,20 @@ def validate_auth(request):
             'authenticator': authenticator
         }
         if authenticator:
-            response = post_request(['auth'], post_data)
-            return JsonResponse(response)
-
+            post_response = post_request(['auth_check'], post_data)
+            if post_response['status']:
+                user_id = post_response['response']['user_id']
+                get_response = get_request(['users', user_id])
+                if get_response['status']:
+                    status = True
+                response_data = get_response['response']
+            else:
+                response_data = post_response['response']
         else:
-            json_data = {"message": "Missing authenticator"}
-            return JsonResponse(json_encode_dict_and_status(json_data, False))
-    json_data = {"message": "Must be a POST request"}
-    return JsonResponse(json_encode_dict_and_status(json_data, False))
+            response_data = {"message": "Missing authenticator"}
+    else:
+        response_data = {"message": "Must be a POST request!"}
+    return JsonResponse(json_encode_dict_and_status(response_data, status))
 
 def get_categories(request, pk=None):
     path_list = ['categories',pk]

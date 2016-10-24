@@ -157,73 +157,7 @@ def users_check_pass(request):
 			pass
 
 		return JsonResponse(json_encode_dict_and_status(response_data, status))
-
-class LoginView(View):
-	model = User
-	required_fields = ['email', 'password']
-
-	@method_decorator(csrf_exempt)
-	def dispatch(self, request, *args, **kwargs):
-		return super(LoginView, self).dispatch(request, *args, **kwargs)
-
-	def post(self, request):
-		status = False
-		json_data = json.loads(request.body.decode('utf-8'))
-		field_dict = retrieve_all_fields(
-						json_data,
-						self.required_fields
-					)
-
-		json_data = {"message": "Invalid login"}
-
-		try:
-			login_user = User.objects.get(email=field_dict['email'])
-			# Check password
-			hashed_password = login_user.password
-			if hashers.check_password(field_dict['password'], hashed_password):
-				# Remove any old authenticators associated with user
-				old_authenticators = Authenticator.objects.filter(user=login_user)
-				old_authenticators.delete()
-				# Create new authenticator
-				authenticator = Authenticator()
-				authenticator.user = login_user
-				authenticator.save()
-				json_data = {
-					"token": authenticator.token,
-					"email": authenticator.user.email,
-					"date_created": authenticator.date_created
-				}
-				status = True
-		except User.DoesNotExist:
-			pass
-		return JsonResponse(json_encode_dict_and_status(json_data, status))
-
-class LogoutView(View):
-	required_fields = ['authenticator']
-
-	@method_decorator(csrf_exempt)
-	def dispatch(self, request, *args, **kwargs):
-		return super(LogoutView, self).dispatch(request, *args, **kwargs)
-
-	def post(self, request):
-		status = False
-		json_data = json.loads(request.body.decode('utf-8'))
-		field_dict = retrieve_all_fields(
-						json_data,
-						self.required_fields
-					)
-
-		auth = get_valid_authenticator(token=field_dict['authenticator'])
-		if auth:
-			auth.delete()
-			status = True
-			json_data = {"message": "success"}
-		else:
-			status = False
-			json_data = {'message': 'Invalid authenticator'}
-
-		return JsonResponse(json_encode_dict_and_status(json_data, status))
-
+		
 class UserView(View):
 	required_fields = ['email', 'school_id', 'password']
 	update_fields = ['user_pk','email','password']
