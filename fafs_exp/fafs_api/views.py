@@ -5,6 +5,7 @@ import requests
 import json
 from django.http import HttpResponse, JsonResponse
 from django.utils import dateparse
+from django.utils.timezone import now
 from django.contrib.humanize.templatetags.humanize import naturalday
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
@@ -49,6 +50,7 @@ def json_encode_dict_and_status(dictionary, status):
     return response_dict
 
 DATE_FORMAT = '%b %d, %Y %H:%M %p'
+DAYS_BEFORE_EXPIRE = 1
 
 def obj_date_to_string(obj, field_list):
     if isinstance(obj, dict):
@@ -127,15 +129,23 @@ def auth_check(request):
             # Check authenticator
             post_response = post_request(['auth_check'], post_data)
             if post_response['status']:
-                # Get user based on returned user id
-                user_id = post_response['response']['user_id']
-                get_response = get_request(['users', user_id])
-                if get_response['status']:
-                    status = True
-                    # Take out password data
-                    get_response['response'].pop('password', None)
+                # Check to see if authenticator is too old
+                auth = get_request(['auth', authenticator])['response']
 
-                response_data = get_response['response']
+                datetime = dateparse.parse_datetime(auth['date_created'])
+                time_diff = (now() - datetime).days
+                if time_diff > DAYS_BEFORE_EXPIRE:
+                    delete_request(['auth', authenticator])
+                    response_data = {"message": "Expired authenticator"}
+                else:
+                    # Get user based on returned user id
+                    user_id = post_response['response']['user_id']
+                    get_response = get_request(['users', user_id])
+                    if get_response['status']:
+                        status = True
+                        # Take out password data
+                        get_response['response'].pop('password', None)
+                    response_data = get_response['response']
             else:
                 response_data = post_response['response']
         else:
