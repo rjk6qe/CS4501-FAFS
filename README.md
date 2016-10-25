@@ -1,5 +1,6 @@
 #Free and for Sale
 ####Home Page : http://localhost:8000/fafs/
+####Passwords for users from fixtures : "pass"
 
 <br>
 #Free and for Sale API
