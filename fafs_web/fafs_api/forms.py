@@ -10,7 +10,7 @@ class UserRegister(forms.Form):
                                 widget=forms.PasswordInput)
 
 class UserLoginForm(forms.Form):
-    email = forms.CharField(label='Enter email:', required=True, max_length=100)
+    email = forms.EmailField(label='Enter email:', required=True, max_length=100)
     password = forms.CharField(label="Enter password:",
                                 required=True,
                                 max_length=100,
