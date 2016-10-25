@@ -26,7 +26,6 @@ def append_to_url(path_list):
 
 def get_request(path_list=None):
     url = append_to_url(path_list)
-    #response = requests.get(url)
     req = urllib.request.Request(url)
     json_response = urllib.request.urlopen(req).read().decode('utf-8')
     return json.loads(json_response)
@@ -80,7 +79,6 @@ def login(request):
             post_response = post_request(['users', 'check_pass'], post_data)
             if post_response['status']:
                 user_id = post_response['response']['user_id']
-
                 # Create authenticator based on user id
                 post_data = {"user_id": user_id}
                 post_response = post_request(['auth'], post_data)

@@ -35,23 +35,6 @@ def json_encode_dict_and_status(dictionary, status):
 	response_dict["response"] = dictionary
 	return response_dict
 
-def get_valid_authenticator(token):
-	"""
-	Returns a valid authenticator based on the token
-	or None if invalid token or authenticator expired
-	"""
-	try:
-		auth = Authenticator.objects.get(token=token)
-		time_diff = datetime.now(timezone.utc) - auth.date_created
-		if time_diff.seconds > 3600:
-			auth.delete()
-			return None
-		else:
-			return auth
-
-	except Authenticator.DoesNotExist:
-		return None
-
 class AuthView(View):
 	model = Authenticator
 	required_fields = ['user_id']

@@ -20,7 +20,6 @@ def append_to_url(path_list):
 
 def get_request(path_list=None):
     url = append_to_url(path_list)
-    #response = requests.get(url)
     req = urllib.request.Request(url)
     json_response = urllib.request.urlopen(req).read().decode('utf-8')
     return json.loads(json_response)
@@ -132,7 +131,6 @@ def register(request):
                 error_list = response['response']['Error']
                 for error in error_list:
                     user_form.add_error(None, error)
-                #etwg = response['hi']
                 registered = False
             else:
                 registered = True
@@ -152,7 +150,6 @@ def login(request):
         if login_form.is_valid():
             email = login_form.cleaned_data['email']
             password = login_form.cleaned_data['password']
-            #next = request.GET.get('next') or reverse('index')
             next = login_form.cleaned_data.get('next') or reverse('index')
             post_data = {
                 "email": email,
