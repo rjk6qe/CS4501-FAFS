@@ -71,7 +71,12 @@ def index(request):
 def product_detail(request, pk):
     cat_resp = get_request(['categories'])
     product_resp = get_request(['products', pk])
-    context_dict = {'categories': cat_resp, 'product': product_resp['response']}
+    context_dict = {'categories': cat_resp}
+    if product_resp['status']:
+        context_dict['product'] = product_resp['response']
+    else:
+        context_dict['error'] = product_resp['response']['message']
+    #context_dict = {'categories': cat_resp, 'product': product_resp['response']}
     return render(request, 'fafs_api/product_detail.html', context_dict)
 
 def category_detail(request, pk):
@@ -103,8 +108,8 @@ def product_create(request):
             if not response['status']:
                 product_form.add_error(None, response['response']['message'])
             else:
-                print(response)
-                return HttpResponseRedirect(reverse('index'))
+                product_pk = response['response']['pk']
+                return HttpResponseRedirect(reverse('product_detail', args=[product_pk]))
     else:
         product_form = ProductForm(category_choices = category_choices)
 
