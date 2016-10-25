@@ -31,8 +31,21 @@
       </form>
         <div class="navbar-collapse collapse">
           <ul class="nav navbar-nav navbar-right">
-                <li><a href="{% url 'index' %}">Home</a></li>
-              </ul>
+            <li><a href="{% url 'index' %}">Home</a></li>
+            {% if request.user %}
+            <li>
+              <form id="logout" method="POST" action="{% url 'logout' %}">
+                {% csrf_token %}
+              </form>
+              <a href="#" onclick="document.getElementById('logout').submit();">
+                Logout
+              </a>
+            </li>
+            {% else %}
+            <li><a href="{% url 'register' %}">Register</a></li>
+            <li><a href="{% url 'login' %}">Login</a></li>
+            {% endif %}
+          </ul>
         </div>
       </div>
     </div>

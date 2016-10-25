@@ -1,6 +1,10 @@
 from django.db import models
-from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
+#from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 from django.core.exceptions import ValidationError
+from django.contrib.auth import hashers
+import os
+import hmac
+from django.conf import settings
 
 class School(models.Model):
 	name = models.CharField(max_length=75, unique=True)
@@ -29,7 +33,7 @@ class Address(models.Model):
 	description = models.CharField(max_length=300)
 	address_2 = models.CharField(max_length=300)
 
-class UserManager(BaseUserManager):
+class UserManager(models.Manager):
 
 	def clean_school(self, school_id):
 		try:
@@ -51,10 +55,10 @@ class UserManager(BaseUserManager):
 
 	def create_user(self, email=None, school=None, password=None):
 		u = self.model(
-			email=UserManager.normalize_email(email),
+			email=self.clean_email(email),
+			password=hashers.make_password(password),
 			school_id=self.clean_school(school)
 			)
-		u.set_password(password)
 		u.clean()
 		u.save()
 		return u
@@ -87,11 +91,10 @@ class UserManager(BaseUserManager):
 				"Error":"Invalid user id" + str(user_pk)
 				})
 
-class User(AbstractBaseUser):
+class User(models.Model):
 	school_id = models.ForeignKey(School)
 	email = models.EmailField(unique=True, blank=False)
-	rating = models.IntegerField(blank=True, null=True)
-	phone_number = models.CharField(max_length=20, blank=True)
+	password = models.CharField(max_length=255, blank=False)
 
 	objects = UserManager()
 
@@ -109,7 +112,26 @@ class User(AbstractBaseUser):
 				)
 		except User.DoesNotExist:
 			pass #this is desired
-	
+
+def get_authenticator_token():
+	while True:
+		authenticator = hmac.new(key = settings.SECRET_KEY.encode('utf-8'), msg = os.urandom(32), digestmod = 'sha256').hexdigest()
+		try:
+			dup_test = Authenticator.objects.get(token=authenticator)
+		except Authenticator.DoesNotExist:
+			dup_test = None
+		if dup_test is None:
+			break
+
+	return authenticator
+
+class Authenticator(models.Model):
+	token = models.CharField(max_length=255,
+							primary_key=True,
+							default=get_authenticator_token)
+	user = models.ForeignKey(User)
+	date_created = models.DateTimeField(auto_now_add=True)
+
 class Category(models.Model):
 	name = models.CharField(max_length=50)
 	description = models.TextField(max_length=500)

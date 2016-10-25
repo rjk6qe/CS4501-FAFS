@@ -19,10 +19,9 @@
     "model": "fafs_api.user",
     "pk": 1,
     "fields": {
-      "email": "email@email.com",
-      "password": "password1",
-      "school_id":1,
-      "phone_number": "555-555-5555"
+      "email": "cake@gmail.com",
+      "password": "pbkdf2_sha256$20000$ctFEMNeVNqHU$jJnPafYrk/FRL/1AHzERRqoaVCSRyYk6d9GTolOlRiA=",
+      "school_id":1
     }
   },
   {
@@ -30,32 +29,8 @@
     "pk": 2,
     "fields": {
       "email": "test@email.com",
-      "password": "password7",
-      "school_id":1, 
-      "rating": 5,
-      "phone_number": "555-555-5555"
-    }
-  },
-  {
-    "model": "fafs_api.user",
-    "pk": 3,
-    "fields": {
-      "email": "amy@email.com",
-      "password": "password10",
-      "school_id":2, 
-      "rating": 2,
-      "phone_number": "888-555-5555"
-    }
-  },
-  {
-    "model": "fafs_api.user",
-    "pk": 4,
-    "fields": {
-      "email": "jue@email.com",
-      "password": "password10",
-      "school_id":2, 
-      "rating": 4,
-      "phone_number": "111-555-5555"
+      "password": "pbkdf2_sha256$20000$ctFEMNeVNqHU$jJnPafYrk/FRL/1AHzERRqoaVCSRyYk6d9GTolOlRiA=",
+      "school_id":1
     }
   },
   {

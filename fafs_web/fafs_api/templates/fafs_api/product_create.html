@@ -1,0 +1,28 @@
+{% extends 'fafs_api/base.html' %}
+
+{% block body_block %}
+
+  <h1>Post a Product Listing</h1>
+  <form id="product_form" method="post" action="{% url 'product_create' %}">
+      {% csrf_token %}
+      {{ product_form.non_field_errors }}
+      {% for hidden in product_form.hidden_fields %}
+          {{ hidden }}
+      {% endfor %}
+      {% for field in product_form.visible_fields %}
+          {{ field.errors }}
+          {{ field.help_text }}
+          {{ field.label_tag }}
+
+
+          <p>
+            {% if field.label == "Price" %}
+            $
+            {% endif %}
+            {{ field }}
+          </p>
+      {% endfor %}
+      <input type="submit" name="submit" class="btn btn-default" value="Submit" />
+  </form>
+
+{% endblock %}

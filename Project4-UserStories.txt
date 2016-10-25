@@ -1,0 +1,5 @@
+1. As a buyer or seller, I want to login to my account, so that I can see personalized content. 
+2. As a seller, I want to create a product listing, so I can sell products. 
+3. As a buyer or seller, I want to be able to register as a new user, so I can use my account. 
+4. As a seller, I want to only post a listing after being logged in, so the product will be sold under my name. 
+5. As a busy user, I want my session to be maintained while navigating through different pages, so I don't need to keep logging in. 

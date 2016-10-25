@@ -2,13 +2,13 @@ from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, get_object_or_404
 from django.views.generic import View
 from django.core.exceptions import ValidationError
-
+from django.contrib.auth import hashers
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
-
+from datetime import datetime, timezone
 import json
 
-from fafs_api.models import User, Address, School, Category, Product, Transaction
+from fafs_api.models import User, Address, School, Category, Product, Transaction, Authenticator
 
 def get_key(dictionary, key):
 	try:
@@ -23,9 +23,9 @@ def retrieve_all_fields(dictionary, field_list):
 		return_dict[field] = value
 	return return_dict
 
-def get_object_or_none(model, pk):
+def get_object_or_none(model, **kwargs):
 	try:
-		return model.objects.get(pk=pk)
+		return model.objects.get(**kwargs)
 	except model.DoesNotExist:
 		return None
 
@@ -34,6 +34,112 @@ def json_encode_dict_and_status(dictionary, status):
 	response_dict["status"] = status
 	response_dict["response"] = dictionary
 	return response_dict
+
+class AuthView(View):
+	model = Authenticator
+	required_fields = ['user_id']
+
+	@method_decorator(csrf_exempt)
+	def dispatch(self, request, *args, **kwargs):
+		return super(AuthView, self).dispatch(request, *args, **kwargs)
+
+	def get(self, request, token=None):
+		status = False
+		if token is not None:
+			queryset = get_object_or_none(
+				self.model,
+				token=token
+			)
+			if queryset is not None:
+				status = True
+				json_data = {
+					"token": queryset.token,
+					"user_id":queryset.user.pk,
+					"date_created":queryset.date_created
+				}
+			else:
+				status = False
+				json_data = {"message": "No authenticator with token found"}
+		else:
+			status = True
+			queryset = self.model.objects.all()
+			json_data = list(queryset.values('token', 'user_id', 'date_created'))
+
+		return JsonResponse(json_encode_dict_and_status(json_data, status))
+
+	def post(self, request):
+		json_data = json.loads(request.body.decode('utf-8'))
+		field_dict = retrieve_all_fields(
+						json_data,
+						self.required_fields
+		)
+		try:
+			user = User.objects.get(pk=field_dict['user_id'])
+			auth = Authenticator()
+			auth.user = user
+			auth.save()
+
+			response_data = {
+				"token": auth.token,
+				"user_id": auth.user.pk,
+				"date_created": auth.date_created
+			}
+			status = True
+		except User.DoesNotExist:
+			status = False
+			response_data = {"message": "Invalid user id"}
+
+		return JsonResponse(json_encode_dict_and_status(response_data, status))
+
+	def delete(self, request, token=None):
+		status = False
+		obj = get_object_or_none(self.model, token=token)
+		if obj is not None:
+			obj.delete()
+			status = True
+		return JsonResponse(json_encode_dict_and_status({},status))
+
+@method_decorator(csrf_exempt)
+def auth_check(request):
+	required_fields = ['authenticator']
+	if request.method == "POST":
+		json_data = json.loads(request.body.decode('utf-8'))
+		field_dict = retrieve_all_fields(
+			json_data,
+			required_fields
+		)
+		status = False
+		try:
+			auth = Authenticator.objects.get(token=field_dict['authenticator'])
+			user_id = auth.user.pk
+			status = True
+			response_data = {"user_id": user_id}
+		except Authenticator.DoesNotExist:
+			response_data = {"message": "Invalid authenticator"}
+		return JsonResponse(json_encode_dict_and_status(response_data, status))
+
+@method_decorator(csrf_exempt)
+def users_check_pass(request):
+	required_fields = ['email', 'password']
+	if request.method == "POST":
+		json_data = json.loads(request.body.decode('utf-8'))
+		field_dict = retrieve_all_fields(
+			json_data,
+			required_fields
+		)
+		status = False
+		response_data = {"message": "Incorrect email/password"}
+		try:
+			login_user = User.objects.get(email=field_dict['email'])
+			# Check password
+			hashed_password = login_user.password
+			if hashers.check_password(field_dict['password'], hashed_password):
+				status = True
+				response_data = {"user_id": login_user.pk}
+		except User.DoesNotExist:
+			pass
+
+		return JsonResponse(json_encode_dict_and_status(response_data, status))
 
 class UserView(View):
 	required_fields = ['email', 'school_id', 'password']
@@ -57,7 +163,7 @@ class UserView(View):
 					"pk":queryset.pk,
 					"email":queryset.email,
 					"school_id":queryset.school_id.pk,
-					"rating":queryset.rating
+					"password":queryset.password
 					}
 			else:
 				status = False
@@ -65,8 +171,8 @@ class UserView(View):
 		else:
 			status = True
 			queryset = self.model.objects.all()
-			json_data = list(queryset.values('pk','email','school_id','rating'))
-		
+			json_data = list(queryset.values('pk','email','school_id', 'password'))
+
 		return JsonResponse(json_encode_dict_and_status(json_data, status))
 
 	def post(self, request):
@@ -85,7 +191,6 @@ class UserView(View):
 			json_data = {
 				"pk":user.pk,
 				"email":user.email,
-				"rating":user.rating,
 				"school_id":user.school_id.pk
 				}
 		except ValidationError as e:
@@ -398,12 +503,15 @@ class ProductView(View):
 			product.clean()
 			product.save()
 			json_data = {
+				"pk": product.pk,
 				"name": product.name,
 				"description": product.description,
 				"category_id": product.category_id.pk,
 				"price": product.price,
 				"owner_id": product.owner_id.pk,
 				"pick_up": product.pick_up,
+				"time_posted": product.time_posted,
+				"time_updated": product.time_updated
 			}
 		except ValidationError as e:
 			status = False
@@ -417,8 +525,6 @@ class ProductView(View):
 			obj.delete()
 			status = True
 		return JsonResponse(json_encode_dict_and_status({},status))
-
-
 
 class TransactionView(View):
 	required_fields = ['seller', 'buyer', 'product_id']
