@@ -140,7 +140,7 @@ def users_check_pass(request):
 			pass
 
 		return JsonResponse(json_encode_dict_and_status(response_data, status))
-		
+
 class UserView(View):
 	required_fields = ['email', 'school_id', 'password']
 	update_fields = ['user_pk','email','password']
@@ -503,12 +503,15 @@ class ProductView(View):
 			product.clean()
 			product.save()
 			json_data = {
+				"pk": product.pk,
 				"name": product.name,
 				"description": product.description,
 				"category_id": product.category_id.pk,
 				"price": product.price,
 				"owner_id": product.owner_id.pk,
 				"pick_up": product.pick_up,
+				"time_posted": product.time_posted,
+				"time_updated": product.time_updated
 			}
 		except ValidationError as e:
 			status = False

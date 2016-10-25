@@ -2,10 +2,18 @@
 ####Home Page : http://localhost:8000/fafs/
 
 <br>
-#Free and for Sale API
+#Free and for Sale Web layer
+## Middleware
+The web layer uses a middleware file for custom authentication rather than Django's built in middleware.
+In each request, the cookie will be checked for the authentication token. If found,
+a request to the experience layer API will be made with the token to attempt to find the user information
+associated with the token. If the token is found and is valid, the user info will be placed in
+request.user.
+
+#Free and for Sale Model API
 
 ##Table: User
-###URL: /api/users/
+###URL: /api/v1/users/
 ###Methods: GET, POST, PATCH
 
 ####GET
@@ -68,4 +76,3 @@
 
 ####POST
 	Accepts: seller, buyer, product_id
-

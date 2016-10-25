@@ -5,7 +5,7 @@ import requests
 import json
 from django.http import HttpResponse, JsonResponse
 from django.utils import dateparse
-from django.utils.timezone import now
+from django.utils.timezone import now, localtime
 from django.contrib.humanize.templatetags.humanize import naturalday
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
@@ -54,12 +54,12 @@ DAYS_BEFORE_EXPIRE = 1
 def obj_date_to_string(obj, field_list):
     if isinstance(obj, dict):
         for field in field_list:
-            str_datetime = dateparse.parse_datetime(obj[field])
-            obj[field + '_readable'] = str_datetime.strftime(DATE_FORMAT)
+            datetime_obj = localtime(dateparse.parse_datetime(obj[field]))
+            obj[field + '_readable'] = datetime_obj.strftime(DATE_FORMAT)
     elif isinstance(obj, list):
         for item in obj:
             for field in field_list:
-                str_datetime = dateparse.parse_datetime(item[field])
+                str_datetime = localtime(dateparse.parse_datetime(item[field]))
                 item[field + '_readable'] = str_datetime.strftime(DATE_FORMAT)
 
 @csrf_exempt
@@ -171,25 +171,30 @@ def get_categories(request, pk=None):
         return JsonResponse(response)
 
 def get_products(request, pk=None):
-    print('Getting products')
+    status = False
     path_list = ['products',pk]
     response = get_request(path_list)
     product_data = response['response']
-    obj_date_to_string(product_data, ['time_posted', 'time_updated'])
+    if response['status']:
+        obj_date_to_string(product_data, ['time_posted', 'time_updated'])
+        if pk:
+            # Get name of category from id
+            path_list = ['categories', product_data['category_id']]
+            response = get_request(path_list)
+            category_data = response['response']
+            product_data['category_name'] = category_data['name']
 
-    # Get name of category from id
-    path_list = ['categories', product_data['category_id']]
-    response = get_request(path_list)
-    category_data = response['response']
-    product_data['category_name'] = category_data['name']
+            # Get owner info from id
+            path_list = ['users', product_data['owner_id']]
+            response = get_request(path_list)
+            owner_data = response['response']
+            owner_data.pop('password', None)
+            product_data['owner'] = owner_data
+        status = True
+    else:
+        product_data = {'message': 'Invalid product id'}
 
-    # Get owner info from id
-    path_list = ['users', product_data['owner_id']]
-    response = get_request(path_list)
-    owner_data = response['response']
-    product_data['owner'] = owner_data
-
-    return JsonResponse(json_encode_dict_and_status(product_data, True))
+    return JsonResponse(json_encode_dict_and_status(product_data, status))
 
 def create_product(request):
     if request.method == "POST":
