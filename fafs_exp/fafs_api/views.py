@@ -240,3 +240,9 @@ def register_user(request):
         else:
             data = {"message": "Missing email/password"}
             return JsonResponse(data, False)
+
+
+#Dummy method for testing purposes
+def create_school(request):
+    school_data = {'name':'UVA','city':'cville','state':'va'}
+    return JsonResponse(post_request(['schools'],school_data))

@@ -77,7 +77,7 @@ class UserManager(models.Manager):
 				user.email = self.clean_email(email)
 				change = True
 			if password:
-				user.set_password(password)
+				user.password = hashers.make_password(password)
 				change = True
 			if change:
 				user.save()

@@ -214,7 +214,6 @@ class UserView(View):
 			json_data = {
 				"pk":user.pk,
 				"email":user.email,
-				"rating":user.rating,
 				"school_id":user.school_id.pk
 				}
 		except ValidationError as e:
@@ -224,7 +223,7 @@ class UserView(View):
 
 	def delete(self, request, pk=None):
 		status = False
-		obj = get_object_or_none(self.model, pk)
+		obj = get_object_or_none(self.model, pk=pk)
 		if obj is not None:
 			obj.delete()
 			status = True
@@ -299,7 +298,7 @@ class AddressView(View):
 
 	def delete(self, request, pk=None):
 		status = False
-		obj = get_object_or_none(self.model, pk)
+		obj = get_object_or_none(self.model, pk=pk)
 		if obj is not None:
 			obj.delete()
 			status = True
@@ -363,7 +362,7 @@ class SchoolView(View):
 
 	def delete(self, request, pk=None):
 		status = False
-		obj = get_object_or_none(self.model, pk)
+		obj = get_object_or_none(self.model, pk=pk)
 		if obj is not None:
 			obj.delete()
 			status = True
@@ -424,7 +423,7 @@ class CategoryView(View):
 
 	def delete(self, request, pk=None):
 		status = False
-		obj = get_object_or_none(self.model, pk)
+		obj = get_object_or_none(self.model, pk=pk)
 		if obj is not None:
 			obj.delete()
 			status = True
@@ -432,7 +431,7 @@ class CategoryView(View):
 
 	def delete(self, request, pk=None):
 		status = False
-		obj = get_object_or_none(self.model, pk)
+		obj = get_object_or_none(self.model, pk=pk)
 		if obj is not None:
 			obj.delete()
 			status = True
@@ -520,7 +519,7 @@ class ProductView(View):
 
 	def delete(self, request, pk=None):
 		status = False
-		obj = get_object_or_none(self.model, pk)
+		obj = get_object_or_none(self.model, pk=pk)
 		if obj is not None:
 			obj.delete()
 			status = True
@@ -594,7 +593,7 @@ class TransactionView(View):
 
 	def delete(self, request, pk=None):
 		status = False
-		obj = get_object_or_none(self.model, pk)
+		obj = get_object_or_none(self.model, pk=pk)
 		if obj is not None:
 			obj.delete()
 			status = True
