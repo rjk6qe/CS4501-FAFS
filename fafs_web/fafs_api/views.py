@@ -183,3 +183,11 @@ def logout(request):
     post_data = {"authenticator": authenticator}
     response = post_request(['logout'], post_data)
     return HttpResponseRedirect(reverse('index'))
+
+@login_required
+def search(request):
+    user = get_user_if_logged_in(request)
+    context_dict = {}
+    context_dict['user'] = user
+    return render(request, 'fafs_api/searchResults.html', context_dict)
+
