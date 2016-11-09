@@ -15,6 +15,8 @@ urlpatterns = [
     url(r'^products/latest/$', views.get_latest_products, name='getLatestProducts_default'),
     url(r'^products/latest/(?P<num>[0-9]*)/$', views.get_latest_products, name='getLatestProducts'),
     url(r'^register/$', views.register_user, name='registerUser'),
+    url(r'^index_products/$', views.index_products, name='indexProducts'),
+    url(r'^search_products/$', views.search_products, name='searchProducts'),
 
     #Dummy method just for testing
     url(r'^school/$', views.create_school),

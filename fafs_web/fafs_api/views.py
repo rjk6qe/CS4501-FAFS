@@ -5,7 +5,7 @@ import urllib.request
 import urllib.parse
 import requests
 import json
-from fafs_api.forms import UserRegister, UserLoginForm, ProductForm
+from fafs_api.forms import UserRegister, UserLoginForm, ProductForm, SearchForm
 from django.core.serializers.json import DjangoJSONEncoder
 
 API_URL = 'http://exp-api:8000/fafs/'
@@ -143,8 +143,6 @@ def register(request):
             print(user_form.errors)
     else:
         user_form = UserRegister()
-
-
     return render(request, 'fafs_api/register.html', {'user_form': user_form, 'registered': registered})
 
 def login(request):
@@ -183,3 +181,23 @@ def logout(request):
     post_data = {"authenticator": authenticator}
     response = post_request(['logout'], post_data)
     return HttpResponseRedirect(reverse('index'))
+
+@login_required
+def search(request):
+    context_dict = {}
+    if request.method == 'POST':
+        search_form = SearchForm(data=request.POST)
+        if search_form.is_valid():
+            keyword = search_form.cleaned_data['keyword']
+            post_data = {
+                "keyword": keyword
+            }
+            response = post_request(['search_products'], post_data)
+            context_dict['response'] = response
+            context_dict['stat'] = "yes"
+    else:
+        search_form = SearchForm()
+    
+    context_dict['search_form'] = search_form
+    return render(request, 'fafs_api/searchResults.html', context_dict)
+
