@@ -276,8 +276,8 @@ def index_products(request, pk=None):
       "status":"N"
     }
     index_status = es.index(index='listing_index', doc_type='listing', id=some_new_listing['pk'], body=some_new_listing)
-    es.indices.refresh(index="listing_index")
-    index_status = es.index(index='listing_index', doc_type='listing', id=some_new_listing['pk'], body=other_new_listing)
+    es.indices.refresh(index="listing_index") 
+    index_status = es.index(index='listing_index', doc_type='listing', id=other_new_listing['pk'], body=other_new_listing)
     es.indices.refresh(index="listing_index")
     return JsonResponse(index_status)
 
