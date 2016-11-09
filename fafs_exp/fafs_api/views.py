@@ -212,7 +212,7 @@ def create_product(request):
 
         # Kafka
         producer = KafkaProducer(bootstrap_servers='kafka:9092')
-        producer.send('new-listings-topic', json.dumps(response).encode('utf-8'))
+        answer = producer.send('new-listings-topic', json.dumps(response).encode('utf-8'))
         return JsonResponse(response)
 
 def get_latest_products(request, num=None):
@@ -257,18 +257,6 @@ def index_products(request, pk=None):
     es = Elasticsearch(['es'])
     some_new_listing = {
       "pk": 10,
-      "name":"Cambodia",
-      "description":"it's a country.",
-      "category_id":"1",
-      "price":"40",
-      "owner_id":"1",
-      "time_posted":"2016-09-01T13:10:30+03:00",
-      "time_updated":"2016-09-19T13:20:30+03:00",
-      "pick_up":"pick up in the alley behind pigeonhole",
-      "status":"N"
-    }
-    other_new_listing = {
-      "pk": 11,
       "name":"Cambodia",
       "description":"it's a country.",
       "category_id":"1",

@@ -2,8 +2,27 @@ from kafka import KafkaConsumer
 from kafka.common import NodeNotReadyError
 from elasticsearch import Elasticsearch
 import time
+import json
 
+
+es = Elasticsearch(['es'])
 kafka_ready = False
+
+some_new_listing = {
+      "pk": 100,
+      "name":"Penguin",
+      "description":"forgive me.",
+      "category_id":"1",
+      "price":"40",
+      "owner_id":"1",
+      "time_posted":"2016-09-01T13:10:30+03:00",
+      "time_updated":"2016-09-19T13:20:30+03:00",
+      "pick_up":"canada",
+      "status":"N"
+}
+
+    index_status = es.index(index='listing_index', doc_type='listing', id=some_new_listing['pk'], body=some_new_listing)
+    es.indices.refresh(index="listing_index") 
 
 while not kafka_ready:
     try:
