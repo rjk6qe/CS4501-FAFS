@@ -11,6 +11,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from django.core.serializers.json import DjangoJSONEncoder
 
+from kafka import KafkaProducer
 
 # Create your views here.
 API_URL = 'http://models-api:8000/api/v1/'
@@ -22,7 +23,6 @@ def append_to_url(path_list):
             if path is not None:
                 url = url + str(path) + '/'
     return url
-
 
 def get_request(path_list=None):
     url = append_to_url(path_list)
@@ -208,6 +208,10 @@ def create_product(request):
             'owner_id': json_data['owner_id']
         }
         response = post_request(['products'], post_data)
+
+        # Kafka
+        producer = KafkaProducer(bootstrap_servers='kafka:9092')
+        producer.send('new-listings-topic', json.dumps(response).encode('utf-8'))
         return JsonResponse(response)
 
 def get_latest_products(request, num=None):
