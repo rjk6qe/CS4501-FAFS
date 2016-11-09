@@ -65,5 +65,4 @@ batch:
     - es:es
   command: >
     bash -c
-    "python kafka_to_es.py"
-    
+    "tail -f /dev/null && python kafka_to_es.py"

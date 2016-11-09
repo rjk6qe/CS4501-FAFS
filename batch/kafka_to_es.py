@@ -11,8 +11,11 @@ while not kafka_ready:
         kafka_ready = True
     except NodeNotReadyError:
         time.sleep(5)
+        consumer = KafkaConsumer('new-listings-topic', group_id='listing-indexer', bootstrap_servers=['kafka:9092'])
 
-for message in consumer:
-    kafka_object = json.loads((message.value).decode('utf-8'))
-    index_status = es.index(index='listing_index', doc_type='listing', id=kakfa_object['pk'], body=kakfa_object)
-    es.indices.refresh(index="listing_index")
+while True: 
+    for message in consumer:
+        kafka_object = json.loads((message.value).decode('utf-8'))
+        index_status = es.index(index='listing_index', doc_type='listing', id=kakfa_object['pk'], body=kakfa_object)
+        print(index_status)
+        es.indices.refresh(index="listing_index")
