@@ -268,7 +268,10 @@ def index_products(request, pk=None):
     return JsonResponse(index_status)
 
 def search_products(request, pk=None):
-    es = Elasticsearch(['es'])
-    es.indices.refresh(index="listing_index")
-    search_results = es.search(index='listing_index', body={'query': {'query_string': {'query': 'Cambodia'}}, 'size': 10})
-    return JsonResponse(search_results)
+    if request.method == 'POST':
+        json_data = json.loads(request.body.decode('utf-8'))
+        keyword = json_data.get('keyword', None)
+        es = Elasticsearch(['es'])
+        es.indices.refresh(index="listing_index")
+        search_results = es.search(index='listing_index', body={'query': {'query_string': {'query': keyword}}, 'size': 10})
+        return JsonResponse(search_results)

@@ -1,6 +1,9 @@
 from django import forms
 from . import views
 
+class SearchForm(forms.Form):
+    keyword = forms.CharField(required=True, max_length=100)
+
 class UserRegister(forms.Form):
     email = forms.EmailField(label='Enter email:', required=True, max_length=100)
     school = forms.CharField(label='Enter school:', required=True, max_length=100)
