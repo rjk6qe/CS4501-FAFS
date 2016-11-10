@@ -33,6 +33,23 @@
             <input type="submit" name="submit" class="btn btn-default" value="Search" />
         </form>
 
-	{{ response }}
+</br>
+
+      <table class="table table-bordered table-hover">
+	<tr>
+		<th> Name </th>
+		<th> Description </th>
+		<th> Price </th>
+		<th> Pick-up Location </th>
+	</tr>
+        {% for hit in response %}
+	<tr>
+		<td> {{hit.name}} </td>
+		<td> {{hit.description}} </td>
+		<td> ${{hit.price}} </td>
+		<td> {{hit.pick_up}} </td>
+	</tr>
+        {% endfor %}
+      </table>
 
 {% endblock %}

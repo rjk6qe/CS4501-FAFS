@@ -253,38 +253,6 @@ def create_school(request):
     return JsonResponse(post_request(['schools'],school_data))
 
 
-def index_products(request, pk=None):
-    es = Elasticsearch(['es'])
-    some_new_listing = {
-      "pk": 10,
-      "name":"Cambodia",
-      "description":"it's a country.",
-      "category_id":"1",
-      "price":"40",
-      "owner_id":"1",
-      "time_posted":"2016-09-01T13:10:30+03:00",
-      "time_updated":"2016-09-19T13:20:30+03:00",
-      "pick_up":"pick up in the alley behind pigeonhole",
-      "status":"N"
-    }
-    other_new_listing = {
-      "pk": 11,
-      "name":"Cambodia",
-      "description":"it's a country.",
-      "category_id":"1",
-      "price":"40",
-      "owner_id":"1",
-      "time_posted":"2016-09-01T13:10:30+03:00",
-      "time_updated":"2016-09-19T13:20:30+03:00",
-      "pick_up":"pick up in the alley behind pigeonhole",
-      "status":"N"
-    }
-    index_status = es.index(index='listing_index', doc_type='listing', id=some_new_listing['pk'], body=some_new_listing)
-    es.indices.refresh(index="listing_index")
-    index_status = es.index(index='listing_index', doc_type='listing', id=other_new_listing['pk'], body=other_new_listing)
-    es.indices.refresh(index="listing_index")
-    return JsonResponse(index_status)
-
 def search_products(request, pk=None):
     if request.method == 'POST':
         json_data = json.loads(request.body.decode('utf-8'))
@@ -292,4 +260,4 @@ def search_products(request, pk=None):
         es = Elasticsearch(['es'])
         es.indices.refresh(index="listing_index")
         search_results = es.search(index='listing_index', body={'query': {'query_string': {'query': keyword}}, 'size': 10})
-        return JsonResponse(search_results)
+        return JsonResponse(search_results["hits"])
