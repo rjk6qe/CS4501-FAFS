@@ -1,0 +1,5 @@
+1. As a buyer or seller, I want to be able to search for listed items, so that I can see whether somebody has posted a certain item.
+2. As a buyer or seller, I want to see a list of search results in a table, so I can see an organized list of results and their details. 
+3. As a buyer or seller, I want to be able to see a "No Results" message if my query didn't match, so I can tell if I need to change my search keyword. 
+4. As a buyer or seller concerned with security, I want to only be able to search for items if I'm logged in, so that search functionality is restricted to users in the system. 
+5. As a seller, I want my item to be searchable after listing it, so I can sell it more easily. 
