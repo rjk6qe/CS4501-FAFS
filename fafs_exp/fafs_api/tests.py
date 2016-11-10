@@ -49,6 +49,7 @@ class UserStoryOne(TestCase):
 	register_url_list = ['register', ]
 	login_url_list = ['login', ]
 
+
 	def setUp(self):
 		response = self.get_request(
 			['school',]
@@ -80,7 +81,7 @@ class UserStoryOne(TestCase):
 		data = {'name':'test','description':'test_descr','pick_up':'sfdds','price':'500','owner_id':1, 'category_id':1}
 		response = self.post_request(
 			['products','create'],
-			data	
+			data
 			)
 		self.assertEqual(
 			response['status'],
@@ -110,7 +111,7 @@ class UserStoryOne(TestCase):
 
 	def test_create_product(self):
 		data = {'name':'test','description':'test_descr','pick_up':'sfdds','price':'500','owner_id':1, 'category_id':1}
-		
+
 		self.post_request(
 			self.login_url_list,
 			self.seller_data
@@ -118,11 +119,111 @@ class UserStoryOne(TestCase):
 
 		response = self.post_request(
 			['products','create'],
-			data	
+			data
 			)
-	 	
+
 		self.assertEqual(
 			response['status'],
 			True,
 			"Unable to create a product while logged in"
 			)
+
+	def test_search_no_keyword(self):
+		data = {"keyword": ""}
+
+		response = self.post_request(
+			['search_products'],
+			data
+			)
+
+		self.assertEqual(
+			len(response['hits']),
+			0,
+			"Response with no search returns a hit"
+			)
+
+	def test_search_created_product_by_name(self):
+		data = {'name':'banana','description':'apples','pick_up':'rice','price':'500','owner_id':1, 'category_id':1}
+		self.post_request(
+		 		self.login_url_list,
+		 		self.seller_data
+		 	)
+
+		response = self.post_request(
+			['products', 'create'],
+			data
+		)
+
+		data = {"keyword": "banana"}
+		search_response = self.post_request(
+			['search_products'],
+			data
+		)
+
+		self.assertEqual(
+			len(search_response['hits']) > 0,
+			True,
+			"Response with created product returns nothing"
+		)
+
+	def test_search_created_product_by_description(self):
+		data = {'name':'banana','description':'apples','pick_up':'rice','price':'500','owner_id':1, 'category_id':1}
+		self.post_request(
+		 		self.login_url_list,
+		 		self.seller_data
+		 	)
+
+		response = self.post_request(
+			['products', 'create'],
+			data
+		)
+
+		data = {"keyword": "apples"}
+		search_response = self.post_request(
+			['search_products'],
+			data
+		)
+
+		self.assertEqual(
+			len(search_response['hits']) > 0,
+			True,
+			"Response with created product returns nothing"
+		)
+
+	def test_search_wrong_keyword(self):
+		data = {"keyword": "asdfasdfasdfadf"}
+
+		search_response = self.post_request(
+			['search_products'],
+			data
+		)
+
+		self.assertEqual(
+			len(search_response['hits']),
+			0,
+			"Response with random keyword returns hit"
+		)
+
+	def test_search_created_product_by_pick_up(self):
+		data = {'name':'banana','description':'apples','pick_up':'rice','price':'500','owner_id':1, 'category_id':1}
+		self.post_request(
+		 		self.login_url_list,
+		 		self.seller_data
+		 	)
+
+		response = self.post_request(
+			['products', 'create'],
+			data
+		)
+
+		data = {"keyword": "rice"}
+		search_response = self.post_request(
+			['search_products'],
+			data
+		)
+
+		self.assertEqual(
+			len(search_response['hits']) > 0,
+			True,
+			"Response with created product and close keyword returns nothing"
+		)
