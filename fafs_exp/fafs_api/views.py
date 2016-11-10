@@ -258,6 +258,13 @@ def search_products(request, pk=None):
         json_data = json.loads(request.body.decode('utf-8'))
         keyword = json_data.get('keyword', None)
         es = Elasticsearch(['es'])
-        es.indices.refresh(index="listing_index")
-        search_results = es.search(index='listing_index', body={'query': {'query_string': {'query': keyword}}, 'size': 10})
-        return JsonResponse(search_results["hits"])
+        if es.indices.exists(index="listing_index"):
+            es.indices.refresh(index="listing_index")
+            search_results = es.search(index='listing_index', body={'query': {'query_string': {'query': keyword}}, 'size': 10})
+            search_results = search_results["hits"]
+        else:
+            #search_results = json.dumps({'status': 0})
+            search_results = es.indices.create(index='listing_index')
+        return JsonResponse(search_results)
+
+

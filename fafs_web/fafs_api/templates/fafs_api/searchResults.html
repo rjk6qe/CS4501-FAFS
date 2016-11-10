@@ -35,6 +35,8 @@
 
 </br>
 
+        {% if status %}
+
       <table class="table table-bordered table-hover">
 	<tr>
 		<th> Name </th>
@@ -51,5 +53,10 @@
 	</tr>
         {% endfor %}
       </table>
+        {% else %}
+	
+	No results. 
+
+        {% endif %}
 
 {% endblock %}
