@@ -185,22 +185,23 @@ def logout(request):
 @login_required
 def search(request):
     context_dict = {}
-    if request.method == 'POST':
-        search_form = SearchForm(data=request.POST)
-        if search_form.is_valid():
-            keyword = search_form.cleaned_data['keyword']
-            post_data = {
-                "keyword": keyword
-            }
-            response = post_request(['search_products'], post_data)
-            if response["hits"]:
-                context_dict['status'] = True
-                hits = response["hits"]
-                context_dict['response'] = []
-                for hit in hits:
-                    context_dict['response'].append(hit["_source"])
-            else:
-                context_dict['status'] = False
+    if request.GET.get("keyword"):
+        search_form = SearchForm(data=request.GET)
+        #if search_form.is_valid():
+            #keyword = search_form.cleaned_data['keyword']
+        keyword = request.GET.get("keyword")
+        post_data = {
+            "keyword": keyword
+        }
+        response = post_request(['search_products'], post_data)
+        if response["hits"]:
+            context_dict['status'] = True
+            hits = response["hits"]
+            context_dict['response'] = []
+            for hit in hits:
+                context_dict['response'].append(hit["_source"])
+        else:
+            context_dict['status'] = False
     else:
         search_form = SearchForm()
     

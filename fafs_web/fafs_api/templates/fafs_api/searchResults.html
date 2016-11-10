@@ -11,13 +11,10 @@
 
 {% block body_block %}
 
-        <form id="search_form" method="post" action="/fafs/search/" role="search">
-            {% csrf_token %} 
+        <form id="search_form" method="get" action="/fafs/search/" role="search">
             <div class="form-group">
             
             {{ search_form.non_field_errors }}
-
-            {% csrf_token %}
             {% for hidden in search_form.hidden_fields %}
                 {{ hidden }}
             {% endfor %}
