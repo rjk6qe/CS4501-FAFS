@@ -194,13 +194,15 @@ def search(request):
             "keyword": keyword
         }
         response = post_request(['search_products'], post_data)
-        if response["hits"]:
-            context_dict['status'] = True
+        try:
             hits = response["hits"]
+            if len(hits) == 0:
+                raise KeyError
+            context_dict['status'] = True
             context_dict['response'] = []
             for hit in hits:
                 context_dict['response'].append(hit["_source"])
-        else:
+        except KeyError:
             context_dict['status'] = False
     else:
         search_form = SearchForm()

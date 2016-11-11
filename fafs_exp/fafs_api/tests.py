@@ -43,8 +43,8 @@ class UserStoryOne(TestCase):
 			)
 		return response
 
-	buyer_data = {'email':'a@a.com','password':'a','school_id':1}
-	seller_data = {'email':'b@b.com', 'password':'b', 'school_id':1}
+	buyer_data = {'email':'c@c.com','password':'a','school_id':1}
+	seller_data = {'email':'d@d.com', 'password':'b', 'school_id':1}
 
 	register_url_list = ['register', ]
 	login_url_list = ['login', ]
@@ -163,7 +163,7 @@ class UserStoryOne(TestCase):
 		self.assertEqual(
 			len(search_response['hits']) > 0,
 			True,
-			"Response with created product returns nothing"
+			"Response with created product returns nothing" + str(response) + str(search_response)
 		)
 
 	def test_search_created_product_by_description(self):

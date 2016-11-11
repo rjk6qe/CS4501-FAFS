@@ -210,9 +210,8 @@ def create_product(request):
         }
         response = post_request(['products'], post_data)
 
-        # Kafka
         producer = KafkaProducer(bootstrap_servers='kafka:9092')
-        answer = producer.send('new-listings-topic', json.dumps(response['response']).encode('utf-8'))
+        producer.send('new-listings-topic', json.dumps(response['response']).encode('utf-8'))
         return JsonResponse(response)
 
 def get_latest_products(request, num=None):
