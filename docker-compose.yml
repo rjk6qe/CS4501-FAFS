@@ -19,6 +19,7 @@ exp:
     - models:models-api
     - kafka:kafka
     - es:es
+    - redis:redis
   ports:
     - "8002:8000"
   volumes:
@@ -26,6 +27,7 @@ exp:
   command: >
     bash -c
     "pip install requests &&
+    pip install redis &&
     mod_wsgi-express start-server --reload-on-changes fafs_exp/wsgi.py"
 
 web:
@@ -40,6 +42,12 @@ web:
     bash -c
     "pip install requests &&
     mod_wsgi-express start-server --reload-on-changes fafs_web/wsgi.py"
+
+redis:
+  image: redis
+  container_name: redis
+  ports:
+    - "6379:6379"
 
 kafka:
   image: spotify/kafka
