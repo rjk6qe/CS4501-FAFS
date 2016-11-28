@@ -16,7 +16,8 @@ script:
   - python app/manage.py test
 
 before_install:
-  - sudo apt-get install docker-compose
+  - sudo curl -L https://github.com/docker/compose/releases/download/1.8.0/docker-compose-`uname -s`-`uname -m` > /usr/local/bin/docker-compose
+  - chmod +x /usr/local/bin/docker-compose
   - sudo service docker start
   - docker pull mysql:5.7.14
   - docker run --name mysql -d -e MYSQL\_ROOT\_PASSWORD='$3cureUS' -v ~/cs4501/db:/var/lib/mysql  mysql:5.7.14
