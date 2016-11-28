@@ -8,7 +8,6 @@ services:
 
 install:
   - pip3 install -q Django==1.10
-  - pip3 install -q MySQL-python==1.2.5
   - pip3 install mysqlclient==1.3.7
   - pip3 install requests==2.9.1
   - pip3 install docker-compose
