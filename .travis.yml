@@ -5,6 +5,7 @@ python:
 
 services:
   - docker
+  - mysql
 
 install:
   - pip3 install -q Django==1.10
