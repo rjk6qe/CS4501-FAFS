@@ -1,0 +1,31 @@
+language: python
+
+python:
+  - "3.5"
+
+services:
+  - docker
+
+install:
+  - pip3 install -q Django==1.10
+  - pip3 install -q MySQL-python==1.2.5
+  - pip3 install mysqlclient==1.3.7
+  - pip3 install requests==2.9.1
+
+script: 
+  - python app/manage.py test
+
+before_install:
+  - sudo apt-get install docker-compose
+  - sudo service docker start
+  - docker pull mysql:5.7.14
+  - docker run --name mysql -d -e MYSQL\_ROOT\_PASSWORD='$3cureUS' -v ~/cs4501/db:/var/lib/mysql  mysql:5.7.14
+  - docker run -it --name mysql-cmdline --link mysql:db mysql:5.7.14 bash
+  - mysql -uroot -p'$3cureUS' -h db
+  - create user 'www'@'%' identified by '$3cureUS';
+  - create database cs4501 character set utf8;
+  - grant all on cs4501.* to 'www'@'%';
+  - quit;
+  - docker-compose up
+
+sudo: required
