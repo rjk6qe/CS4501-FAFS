@@ -55,6 +55,7 @@ class UserStoryOne(TestCase):
 			['school',]
 			)
 		if response['status']:
+			print(response['response'])
 			self.buyer_data['school_id'] = response['response']['pk']
 			self.seller_data['school_id'] = response['response']['pk']
 		self.post_request(
@@ -184,6 +185,7 @@ class UserStoryOne(TestCase):
 			data
 		)
 
+		print(search_response)
 		self.assertEqual(
 			len(search_response['hits']) > 0,
 			True,
