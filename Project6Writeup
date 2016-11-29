@@ -6,6 +6,7 @@ Redis:
 In the experience layer, redis was used to cache requests that pertain to operations where you GET a user, category, or product.
 These can been seen in the views.py file for the EXP layer from line 44 - 77. If a POST operation was perform, this would modify the data, therefore the cache is then flushed.
 The cache is also set to expire within one hour.
+The docker compose file was updated in order to include the Redis container and link this to the EXP layer.
 
 
 Continuous Integration (Travis CI):
