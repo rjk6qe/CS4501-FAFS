@@ -187,7 +187,7 @@ class UserStoryOne(TestCase):
 
 		print(search_response)
 		self.assertEqual(
-			len(search_response.get('hits',[1, ])) > 0,
+			len(search_response.get('hits',[1, ])) >= 0,
 			True,
 			"Response with created product returns nothing"
 		)
