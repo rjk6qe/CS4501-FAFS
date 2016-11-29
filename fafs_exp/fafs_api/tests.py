@@ -43,8 +43,8 @@ class UserStoryOne(TestCase):
 			)
 		return response
 
-	buyer_data = {'email':'c@c.com','password':'a','school_id':1}
-	seller_data = {'email':'d@d.com', 'password':'b', 'school_id':1}
+	buyer_data = {'email':'c@c.com','password':'a','school_id':3}
+	seller_data = {'email':'d@d.com', 'password':'b', 'school_id':3}
 
 	register_url_list = ['register', ]
 	login_url_list = ['login', ]
@@ -56,8 +56,8 @@ class UserStoryOne(TestCase):
 			)
 		if response['status']:
 			print(response['response'])
-			self.buyer_data['school_id'] = response['response']['pk']
-			self.seller_data['school_id'] = response['response']['pk']
+			self.buyer_data['school_id'] = response['response'].get('pk',3)
+			self.seller_data['school_id'] = response['response'].get('pk',3)
 		self.post_request(
 			self.register_url_list,
 			self.buyer_data
