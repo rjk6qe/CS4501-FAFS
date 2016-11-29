@@ -31,6 +31,7 @@ script:
   - >
     docker exec -it cs4501fafs_models_1 bash -c
     "python manage.py test --noinput"
+  - sleep 10
   - >
     docker exec -it cs4501fafs_exp_1 bash -c
     "python manage.py test --noinput"
