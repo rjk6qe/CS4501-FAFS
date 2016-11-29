@@ -1,7 +1,10 @@
 sudo: required
 dist: trusty # google-cloud-engine mod of ubuntu 14.04.3 LTS
 
-# if specific versions of docker or docker-compose are needed, see travis-CI docs
+language: python
+python:
+  - "3.5"
+
 services:
   - docker # default is docker 1.8.2 and docker-compose 1.4.2 (as of Oct. 2016)
 
