@@ -25,13 +25,14 @@ install: # prepare mySQL database
 
 before_script:
   - docker-compose up -d
+  - docker ps -a
 
 script:
   - >
-    docker exec -it fafs_models_1 bash -c
+    docker exec -it cs4501fafs_models_1 bash -c
     "python manage.py test --noinput"
   - >
-    docker exec -it fafs_exp_1 bash -c
+    docker exec -it cs4501fafs_exp_1 bash -c
     "python manage.py test --noinput"
   # can put other tests (e.g. integrations) here too with exp, web containers
 
