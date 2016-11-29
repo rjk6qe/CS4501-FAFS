@@ -288,7 +288,8 @@ def register_user(request):
 #Dummy method for testing purposes
 def create_school(request):
     school_data = {'name':'UVA','city':'cville','state':'va'}
-    data = json_encode_dict_and_status(post_request(['schools',], school_data), True)
+    response_data = post_request(['schools'], school_data)
+    data = json_encode_dict_and_status(response_data, response_data['status'])
     return JsonResponse(data)
 
 
