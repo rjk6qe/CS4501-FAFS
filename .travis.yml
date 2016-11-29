@@ -28,9 +28,11 @@ before_script:
 
 script:
   - >
-    docker exec -it models bash -c
-    "pip install -r requirements.txt &&
-    python manage.py test --noinput" # run Django unit tests on models
+    docker exec -it fafs_models_1 bash -c
+    "python manage.py test --noinput"
+  - >
+    docker exec -it fafs_exp_1 bash -c
+    "python manage.py test --noinput"
   # can put other tests (e.g. integrations) here too with exp, web containers
 
 after_script:
