@@ -354,6 +354,7 @@ class SchoolView(View):
 				"name":school.name,
 				"city":school.city,
 				"state":school.state
+				"pk":school.pk
 				}
 		except ValidationError as e:
 			status = False
