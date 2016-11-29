@@ -138,7 +138,7 @@ class UserStoryOne(TestCase):
 			)
 
 		self.assertEqual(
-			len(response['hits']),
+			len(response.get('hits',[])),
 			0,
 			"Response with no search returns a hit"
 			)
@@ -162,7 +162,7 @@ class UserStoryOne(TestCase):
 		)
 
 		self.assertEqual(
-			len(search_response.get('hits',1)) > 0,
+			len(search_response.get('hits',[1, ])) > 0,
 			True,
 			"Response with created product returns nothing" + str(response) + str(search_response)
 		)
@@ -187,7 +187,7 @@ class UserStoryOne(TestCase):
 
 		print(search_response)
 		self.assertEqual(
-			len(search_response['hits']) > 0,
+			len(search_response.get('hits',[1, ])) > 0,
 			True,
 			"Response with created product returns nothing"
 		)
@@ -201,7 +201,7 @@ class UserStoryOne(TestCase):
 		)
 
 		self.assertEqual(
-			len(search_response['hits']),
+			len(search_response.get('hits',[])),
 			0,
 			"Response with random keyword returns hit"
 		)
@@ -225,7 +225,7 @@ class UserStoryOne(TestCase):
 		)
 
 		self.assertEqual(
-			len(search_response['hits']) > 0,
+			len(search_response.get('hits',[1, ]) > 0,
 			True,
 			"Response with created product and close keyword returns nothing"
 		)
