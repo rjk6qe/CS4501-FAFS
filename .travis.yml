@@ -1,27 +1,38 @@
 sudo: required
+dist: trusty # google-cloud-engine mod of ubuntu 14.04.3 LTS
 
-language: python
-
-python:
-  - "3.5"
-
+# if specific versions of docker or docker-compose are needed, see travis-CI docs
 services:
-  - mysql
-  - docker
+  - docker # default is docker 1.8.2 and docker-compose 1.4.2 (as of Oct. 2016)
 
-install:
-  - pip3 install -q Django==1.10
-  - pip3 install mysqlclient==1.3.7
-  - pip3 install requests==2.9.1
-  - pip3 install docker-compose
-
-script: 
-  - python app/manage.py test
+install: # prepare mySQL database
+  - docker pull mysql:5.7.14
+  - mkdir db
+  - >
+    docker run --name mysql -d -e MYSQL_ROOT_PASSWORD='$3cureUS'
+    -v `pwd`/db:/var/lib/mysql mysql:5.7.14
+  - sleep 10 # need to give time for mysql to start
+  - >
+    docker run -it --name mysql-cmd --rm --link mysql:db mysql:5.7.14
+    mysql -uroot -p'$3cureUS' -h db -v -e
+    "CREATE DATABASE cs4501 CHARACTER SET utf8;
+    CREATE DATABASE test_cs4501 CHARACTER SET utf8;
+    CREATE USER 'www'@'%' IDENTIFIED BY '\$3cureUS';
+    GRANT ALL PRIVILEGES ON *.* TO 'www'@'%';"
 
 before_script:
-  - docker pull mysql:5.7.14
-  - mkdir -p ~/cs4501/db/
-  - docker run --name mysql -d -e MYSQL\_ROOT\_PASSWORD='$3cureUS' -v ~/cs4501/db:/var/lib/mysql  mysql:5.7.14
-  - docker run -it --name mysql-cmdline --link mysql:db mysql:5.7.14 bash -c "mysql -uroot -p'$3cureUS' -h db -e \"create user 'www'@'%' identified by '$3cureUS'; create database cs4501 character set utf8; grant all on cs4501.* to 'www'@'%';\""
-  - docker-compose up
+  - docker-compose up -d
 
+script:
+  - >
+    docker exec -it models bash -c
+    "pip install -r requirements.txt &&
+    python manage.py test --noinput" # run Django unit tests on models
+  # can put other tests (e.g. integrations) here too with exp, web containers
+
+after_script:
+  - docker-compose stop
+  - docker stop mysql
+  - docker rm `docker ps -a -q`
+  - docker rmi `docker images -q`
+  - rm -rf db
