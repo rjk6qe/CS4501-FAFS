@@ -307,5 +307,9 @@ def search_products(request, pk=None):
             search_results = search_results["hits"]
         else:
             #search_results = json.dumps({'status': 0})
-            search_results = es.indices.create(index='listing_index')
+            try:
+                search_results = es.indices.create(index='listing_index')
+            except:
+                search_results = es.search(index='listing_index', body={'query': {'query_string': {'query': keyword}}, 'size': 10})
+
         return JsonResponse(search_results)
