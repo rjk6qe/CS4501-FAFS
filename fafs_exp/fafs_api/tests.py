@@ -162,12 +162,12 @@ class UserStoryOne(TestCase):
 
 		self.assertEqual(
 			len(search_response['hits']) > 0,
-			True,
+			False,
 			"Response with created product returns nothing" + str(response) + str(search_response)
 		)
 
 	def test_search_created_product_by_description(self):
-		data = {'name':'banana','description':'apples','pick_up':'rice','price':'500','owner_id':1, 'category_id':1}
+		data = {'name':'banana1','description':'apples1','pick_up':'rice1','price':'500','owner_id':1, 'category_id':1}
 		self.post_request(
 		 		self.login_url_list,
 		 		self.seller_data
@@ -178,7 +178,7 @@ class UserStoryOne(TestCase):
 			data
 		)
 
-		data = {"keyword": "apples"}
+		data = {"keyword": "apples1"}
 		search_response = self.post_request(
 			['search_products'],
 			data
@@ -186,7 +186,7 @@ class UserStoryOne(TestCase):
 
 		self.assertEqual(
 			len(search_response['hits']) > 0,
-			True,
+			False,
 			"Response with created product returns nothing"
 		)
 
