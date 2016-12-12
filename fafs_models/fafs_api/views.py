@@ -353,7 +353,8 @@ class SchoolView(View):
 			json_data = {
 				"name":school.name,
 				"city":school.city,
-				"state":school.state
+				"state":school.state,
+				"pk":school.pk
 				}
 		except ValidationError as e:
 			status = False

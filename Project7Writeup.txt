@@ -1,0 +1,17 @@
+Project 7 can be found at:
+https://github.com/rjk6qe/CS4501-FAFS/blob/master/data
+
+Coviews
+Source code:
+  coviews.py
+Input file:
+  clicks.log
+Output file:
+  coviews.output
+  
+Example
+(example in the course material Project 7 writeup)
+Source code:
+  hello.py
+Input file:
+  access.log

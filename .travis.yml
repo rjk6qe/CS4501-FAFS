@@ -1,0 +1,45 @@
+sudo: required
+dist: trusty # google-cloud-engine mod of ubuntu 14.04.3 LTS
+
+language: python
+python:
+  - "3.5"
+
+services:
+  - docker # default is docker 1.8.2 and docker-compose 1.4.2 (as of Oct. 2016)
+
+install: # prepare mySQL database
+  - docker pull mysql:5.7.14
+  - mkdir db
+  - >
+    docker run --name mysql -d -e MYSQL_ROOT_PASSWORD='$3cureUS'
+    -v `pwd`/db:/var/lib/mysql mysql:5.7.14
+  - sleep 10 # need to give time for mysql to start
+  - >
+    docker run -it --name mysql-cmd --rm --link mysql:db mysql:5.7.14
+    mysql -uroot -p'$3cureUS' -h db -v -e
+    "CREATE DATABASE cs4501 CHARACTER SET utf8;
+    CREATE DATABASE test_cs4501 CHARACTER SET utf8;
+    CREATE USER 'www'@'%' IDENTIFIED BY '\$3cureUS';
+    GRANT ALL PRIVILEGES ON *.* TO 'www'@'%';"
+
+before_script:
+  - docker-compose up -d
+  - docker ps -a
+
+script:
+  - >
+    docker exec -it cs4501fafs_models_1 bash -c
+    "python manage.py test --noinput"
+  - sleep 10
+  - >
+    docker exec -it cs4501fafs_exp_1 bash -c
+    "python manage.py test --noinput"
+  # can put other tests (e.g. integrations) here too with exp, web containers
+
+after_script:
+  - docker-compose stop
+  - docker stop mysql
+  - docker rm `docker ps -a -q`
+  - docker rmi `docker images -q`
+  - rm -rf db

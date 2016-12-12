@@ -3,6 +3,7 @@ import urllib.request
 import urllib.parse
 import requests
 import json
+import redis
 from django.http import HttpResponse, JsonResponse
 from django.utils import dateparse
 from django.utils.timezone import now, localtime
@@ -16,6 +17,14 @@ from kafka import KafkaProducer
 
 # Create your views here.
 API_URL = 'http://models-api:8000/api/v1/'
+CACHE_EXP_TIME_SECS = 3600 # Default 1 hour
+
+redis_cache = redis.StrictRedis(host='redis', port=6379, db=0)
+
+# Paths that will be cached
+# If a GET request is made, the cache is checked
+# If a POST request is made, the cache is cleared
+CACHE_PATHS = ['products', 'users', 'categories']
 
 def append_to_url(path_list):
     url = API_URL
@@ -25,16 +34,46 @@ def append_to_url(path_list):
                 url = url + str(path) + '/'
     return url
 
+def redis_key_name(path_list):
+    key_name = None
+    if path_list:
+        if path_list[0] in CACHE_PATHS:
+            key_name = ''
+            for path in path_list:
+                if path is not None:
+                    key_name = key_name + str(path) + ':'
+            key_name = key_name[:-1]
+    return key_name
+
 def get_request(path_list=None):
     url = append_to_url(path_list)
-    req = urllib.request.Request(url)
-    json_response = urllib.request.urlopen(req).read().decode('utf-8')
+    key_name = redis_key_name(path_list)
+    json_response = None
+    if key_name:
+        # If path is cacheable, see if it is in the cache
+        key_name = redis_key_name(path_list)
+        json_response = redis_cache.get(key_name)
+
+    if not json_response:
+        req = urllib.request.Request(url)
+        json_response = urllib.request.urlopen(req).read().decode('utf-8')
+        if key_name:
+            print("Setting cache: " + key_name)
+            redis_cache.set(key_name, json_response)
+            redis_cache.expire(key_name, CACHE_EXP_TIME_SECS)
+    else:
+        json_response = json_response.decode('utf-8')
+        print("From cache:" + key_name)
     return json.loads(json_response)
 
 def post_request(path_list, data):
+    key_name = redis_key_name(path_list)
     url = append_to_url(path_list)
     req = requests.post(url, data=json.dumps(data, cls=DjangoJSONEncoder))
     json_response = req.json()
+    # If a change has been made to a cacheable path (via post request) clear the cache
+    if key_name:
+        redis_cache.flushall()
     return json_response
 
 def delete_request(path_list):
@@ -249,7 +288,9 @@ def register_user(request):
 #Dummy method for testing purposes
 def create_school(request):
     school_data = {'name':'UVA','city':'cville','state':'va'}
-    return JsonResponse(post_request(['schools'],school_data))
+    response_data = post_request(['schools'], school_data)
+    data = json_encode_dict_and_status(response_data, response_data['status'])
+    return JsonResponse(data)
 
 
 def search_products(request, pk=None):
@@ -265,5 +306,3 @@ def search_products(request, pk=None):
             #search_results = json.dumps({'status': 0})
             search_results = es.indices.create(index='listing_index')
         return JsonResponse(search_results)
-
-
