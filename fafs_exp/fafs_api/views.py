@@ -26,6 +26,9 @@ redis_cache = redis.StrictRedis(host='redis', port=6379, db=0)
 # If a POST request is made, the cache is cleared
 CACHE_PATHS = ['products', 'users', 'categories']
 
+
+es = Elasticsearch(['es'])
+
 def append_to_url(path_list):
     url = API_URL
     if path_list is not None:
@@ -297,7 +300,7 @@ def search_products(request, pk=None):
     if request.method == 'POST':
         json_data = json.loads(request.body.decode('utf-8'))
         keyword = json_data.get('keyword', None)
-        es = Elasticsearch(['es'])
+        
         if es.indices.exists(index="listing_index"):
             es.indices.refresh(index="listing_index")
             search_results = es.search(index='listing_index', body={'query': {'query_string': {'query': keyword}}, 'size': 10})
