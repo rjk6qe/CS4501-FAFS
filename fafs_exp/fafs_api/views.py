@@ -311,4 +311,5 @@ def search_products(request, pk=None):
                 search_results = es.indices.create(index='listing_index')
             except:
                 search_results = {'hits':[]}
-            return JsonResponse(search_results)
+
+        return JsonResponse(search_results)
